@@ -1,0 +1,11 @@
+basePath: /v1
+host: https://api.isling.me
+info:
+  contact:
+    email: api@isling.me
+    name: Isling Open API Support
+  description: This is a Isling Open API.
+  title: Isling Open API
+  version: "1.0"
+paths: {}
+swagger: "2.0"

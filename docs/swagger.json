@@ -1,0 +1,15 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "This is a Isling Open API.",
+        "title": "Isling Open API",
+        "contact": {
+            "name": "Isling Open API Support",
+            "email": "api@isling.me"
+        },
+        "version": "1.0"
+    },
+    "host": "https://api.isling.me",
+    "basePath": "/v1",
+    "paths": {}
+}

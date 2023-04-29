@@ -1,0 +1,13 @@
+app:
+  name: 'isling-be'
+  version: '0.1.0'
+
+http:
+  port: '8080'
+
+logger:
+  log_level: 'debug'
+  rollbar_env: 'isling-be'
+
+postgres:
+  pool_max: 2
