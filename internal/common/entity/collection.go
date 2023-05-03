@@ -1,9 +1,5 @@
 package entity
 
-import (
-	"errors"
-)
-
 type (
 	Pagination struct {
 		Offset int `json:"offset" example:"0"`
@@ -13,15 +9,8 @@ type (
 
 	Collection[T any] struct {
 		Pagination
-		Edges []T `json:"edges" example:"[{ 'userID': 1, 'name': 'Luffy' }]"`
+		Edges []T `json:"edges" example:"[{ 'userId': 1, 'name': 'Luffy' }]"`
 	}
-
-	AccountId int
-)
-
-var (
-	ErrNoRows     = errors.New("error no rows")
-	ErrDuplicated = errors.New("error duplicated")
 )
 
 func NewCollection[T any](edges []T, offset, limit, total int) Collection[T] {

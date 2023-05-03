@@ -8,7 +8,7 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/btcs-longnp/isling-be/internal/account/entity"
+	"github.com/btcs-longnp/isling-be/internal/account/controller/http/v1/dto"
 	"github.com/btcs-longnp/isling-be/internal/account/usecase"
 	common_entity "github.com/btcs-longnp/isling-be/internal/common/entity"
 	"github.com/btcs-longnp/isling-be/pkg/logger"
@@ -48,11 +48,11 @@ func (router *AccountsRouter) getOne(c echo.Context) error {
 		return common_entity.ResponseError(c, http.StatusInternalServerError, "server error")
 	}
 
-	return common_entity.ResponseSuccess(c, http.StatusOK, "success", account.ToAccountWithoutPass())
+	return common_entity.ResponseSuccess(c, http.StatusOK, "success", account)
 }
 
 func (router *AccountsRouter) create(c echo.Context) error {
-	createAccountDto := entity.CreateAccountDto{}
+	createAccountDto := dto.CreateAccountDto{}
 
 	if err := c.Bind(&createAccountDto); err != nil {
 		return common_entity.ResponseError(c, http.StatusBadRequest, err.Error())
@@ -62,7 +62,7 @@ func (router *AccountsRouter) create(c echo.Context) error {
 		return common_entity.ResponseError(c, http.StatusBadRequest, err.Error())
 	}
 
-	account, err := router.accountUC.CreateAccount(c.Request().Context(), createAccountDto)
+	account, err := router.accountUC.CreateAccount(c.Request().Context(), createAccountDto.ToCreateAccountRequest())
 	if err != nil {
 		code := http.StatusInternalServerError
 

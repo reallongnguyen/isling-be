@@ -29,11 +29,6 @@ func NewAccount(
 	}
 }
 
-type CreateAccountDto struct {
-	Username string `json:"username" validate:"required,email" example:"isling@isling.me"`
-	Password string `json:"password" validate:"required,min=8,max=255" example:"wakaranai"`
-}
-
 type AccountWithoutPass struct {
 	Id        common_entity.AccountId `json:"id" example:"1"`
 	Username  string                  `json:"username" example:"isling@isling.me"`

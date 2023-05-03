@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/btcs-longnp/isling-be/internal/account/entity"
+	"github.com/btcs-longnp/isling-be/internal/account/usecase/request"
 	common_entity "github.com/btcs-longnp/isling-be/internal/common/entity"
 	common_uc "github.com/btcs-longnp/isling-be/internal/common/usecase"
 	"github.com/btcs-longnp/isling-be/pkg/logger"
@@ -23,7 +24,7 @@ func NewAccountUC(repo AccountRepository, log logger.Interface) AccountUsecase {
 	}
 }
 
-func (uc *AccountUC) CreateAccount(ctx context.Context, createUserDto entity.CreateAccountDto) (*entity.Account, error) {
+func (uc *AccountUC) CreateAccount(ctx context.Context, createUserDto request.CreateAccountReq) (*entity.AccountWithoutPass, error) {
 	// check user exist
 	usernameAvailable, err := uc.checkUsernameAvailable(ctx, createUserDto.Username)
 	if err != nil {
@@ -47,7 +48,13 @@ func (uc *AccountUC) CreateAccount(ctx context.Context, createUserDto entity.Cre
 
 	user := entity.NewAccount(0, createUserDto.Username, hashedPassword, time.Now(), time.Now())
 
-	return uc.repo.Store(ctx, &user)
+	account, err := uc.repo.Store(ctx, &user)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return account.ToAccountWithoutPass(), nil
 }
 
 func (uc *AccountUC) checkUsernameAvailable(ctx context.Context, username string) (bool, error) {
@@ -64,6 +71,12 @@ func (uc *AccountUC) checkUsernameAvailable(ctx context.Context, username string
 	return false, nil
 }
 
-func (uc *AccountUC) GetAccountByID(ctx context.Context, userId common_entity.AccountId) (*entity.Account, error) {
-	return uc.repo.FindByID(ctx, userId)
+func (uc *AccountUC) GetAccountByID(ctx context.Context, userId common_entity.AccountId) (*entity.AccountWithoutPass, error) {
+	account, err := uc.repo.FindByID(ctx, userId)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return account.ToAccountWithoutPass(), nil
 }

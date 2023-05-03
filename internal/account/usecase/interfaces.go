@@ -5,6 +5,7 @@ import (
 	"context"
 
 	"github.com/btcs-longnp/isling-be/internal/account/entity"
+	"github.com/btcs-longnp/isling-be/internal/account/usecase/request"
 	common_entity "github.com/btcs-longnp/isling-be/internal/common/entity"
 )
 
@@ -12,8 +13,8 @@ import (
 
 type (
 	AccountUsecase interface {
-		GetAccountByID(context.Context, common_entity.AccountId) (*entity.Account, error)
-		CreateAccount(context.Context, entity.CreateAccountDto) (*entity.Account, error)
+		GetAccountByID(context.Context, common_entity.AccountId) (*entity.AccountWithoutPass, error)
+		CreateAccount(context.Context, request.CreateAccountReq) (*entity.AccountWithoutPass, error)
 	}
 
 	AccountRepository interface {

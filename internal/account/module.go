@@ -2,8 +2,8 @@ package account
 
 import (
 	controller_v1 "github.com/btcs-longnp/isling-be/internal/account/controller/http/v1"
+	"github.com/btcs-longnp/isling-be/internal/account/repo"
 	"github.com/btcs-longnp/isling-be/internal/account/usecase"
-	"github.com/btcs-longnp/isling-be/internal/account/usecase/repo"
 	"github.com/btcs-longnp/isling-be/pkg/logger"
 	"github.com/btcs-longnp/isling-be/pkg/postgres"
 	"github.com/labstack/echo/v4"
