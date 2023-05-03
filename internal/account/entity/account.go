@@ -3,7 +3,7 @@ package entity
 import (
 	"time"
 
-	common_entity "github.com/btcs-longnp/isling-be/internal/common/entity"
+	common_entity "isling-be/internal/common/entity"
 )
 
 type Account struct {

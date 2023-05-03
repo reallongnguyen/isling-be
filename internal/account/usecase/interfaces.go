@@ -4,9 +4,9 @@ package usecase
 import (
 	"context"
 
-	"github.com/btcs-longnp/isling-be/internal/account/entity"
-	"github.com/btcs-longnp/isling-be/internal/account/usecase/request"
-	common_entity "github.com/btcs-longnp/isling-be/internal/common/entity"
+	"isling-be/internal/account/entity"
+	"isling-be/internal/account/usecase/request"
+	common_entity "isling-be/internal/common/entity"
 )
 
 //go:generate mockgen -source=interfaces.go -destination=./mocks_test.go -package=usecase_test

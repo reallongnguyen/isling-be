@@ -1,6 +1,6 @@
 linters-settings:
   gci:
-    local-prefixes: github.com/btcs-longnp/isling-be
+    local-prefixes: isling-be
   dupl:
     threshold: 100
   errorlint:

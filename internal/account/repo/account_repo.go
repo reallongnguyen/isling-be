@@ -6,10 +6,10 @@ import (
 
 	pgx "github.com/jackc/pgx/v4"
 
-	"github.com/btcs-longnp/isling-be/internal/account/entity"
-	"github.com/btcs-longnp/isling-be/internal/account/usecase"
-	common_entity "github.com/btcs-longnp/isling-be/internal/common/entity"
-	"github.com/btcs-longnp/isling-be/pkg/postgres"
+	"isling-be/internal/account/entity"
+	"isling-be/internal/account/usecase"
+	common_entity "isling-be/internal/common/entity"
+	"isling-be/pkg/postgres"
 )
 
 type AccountRepo struct {

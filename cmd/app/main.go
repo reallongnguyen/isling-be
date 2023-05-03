@@ -3,8 +3,8 @@ package main
 import (
 	"log"
 
-	"github.com/btcs-longnp/isling-be/config"
-	"github.com/btcs-longnp/isling-be/internal/app"
+	"isling-be/config"
+	"isling-be/internal/app"
 )
 
 func main() {

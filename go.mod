@@ -1,4 +1,4 @@
-module github.com/btcs-longnp/isling-be
+module isling-be
 
 go 1.20
 

@@ -5,11 +5,11 @@ import (
 	"errors"
 	"time"
 
-	"github.com/btcs-longnp/isling-be/internal/account/entity"
-	"github.com/btcs-longnp/isling-be/internal/account/usecase/request"
-	common_entity "github.com/btcs-longnp/isling-be/internal/common/entity"
-	common_uc "github.com/btcs-longnp/isling-be/internal/common/usecase"
-	"github.com/btcs-longnp/isling-be/pkg/logger"
+	"isling-be/internal/account/entity"
+	"isling-be/internal/account/usecase/request"
+	common_entity "isling-be/internal/common/entity"
+	common_uc "isling-be/internal/common/usecase"
+	"isling-be/pkg/logger"
 )
 
 type AccountUC struct {

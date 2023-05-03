@@ -9,11 +9,11 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/btcs-longnp/isling-be/config"
+	"isling-be/config"
 
-	"github.com/btcs-longnp/isling-be/pkg/httpserver"
-	"github.com/btcs-longnp/isling-be/pkg/logger"
-	"github.com/btcs-longnp/isling-be/pkg/postgres"
+	"isling-be/pkg/httpserver"
+	"isling-be/pkg/logger"
+	"isling-be/pkg/postgres"
 )
 
 // Run creates objects via constructors.

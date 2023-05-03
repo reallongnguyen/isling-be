@@ -8,10 +8,10 @@ import (
 
 	"github.com/labstack/echo/v4"
 
-	"github.com/btcs-longnp/isling-be/internal/account/controller/http/v1/dto"
-	"github.com/btcs-longnp/isling-be/internal/account/usecase"
-	common_entity "github.com/btcs-longnp/isling-be/internal/common/entity"
-	"github.com/btcs-longnp/isling-be/pkg/logger"
+	"isling-be/internal/account/controller/http/v1/dto"
+	"isling-be/internal/account/usecase"
+	common_entity "isling-be/internal/common/entity"
+	"isling-be/pkg/logger"
 )
 
 type AccountsRouter struct {

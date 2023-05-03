@@ -1,7 +1,7 @@
 package dto
 
 import (
-	"github.com/btcs-longnp/isling-be/internal/account/usecase/request"
+	"isling-be/internal/account/usecase/request"
 )
 
 type CreateAccountDto struct {
