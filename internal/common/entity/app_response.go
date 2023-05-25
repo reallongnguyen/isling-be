@@ -8,7 +8,7 @@ type AppResponse[T any] struct {
 	Success bool   `json:"success" example:"true"`
 	Code    int    `json:"code" example:"200"`
 	Message string `json:"message" example:"SUCCESS"`
-	Data    T      `json:"data,omitempty" example:"{ 'userID': 1, 'name': 'Luffy' }"`
+	Data    T      `json:"data,omitempty" example:"{ 'accountID': 1, 'name': 'Luffy' }"`
 }
 
 func ResponseError(c echo.Context, code int, msg string) error {

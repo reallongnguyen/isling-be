@@ -20,10 +20,11 @@ import (
 // @contact.email api@isling.me
 
 // @host https://api.isling.me
-// @BasePath /v1
+// @BasePath /v1.
 func Register(pg *postgres.Postgres, l logger.Interface, handler *echo.Echo) {
 	accountRepo := repo.NewAccountRepo(pg)
 	accountUC := usecase.NewAccountUC(accountRepo, l)
+	authUC := usecase.NewAuthUsecase(l, accountRepo)
 
 	groupV1 := handler.Group("/v1")
 
@@ -31,5 +32,6 @@ func Register(pg *postgres.Postgres, l logger.Interface, handler *echo.Echo) {
 
 	{
 		controller_v1.NewAccountsRouter(groupV1, accountUC, l)
+		controller_v1.NewAuthRouter(groupV1, l, authUC)
 	}
 }

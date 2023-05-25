@@ -9,7 +9,7 @@ type (
 
 	Collection[T any] struct {
 		Pagination
-		Edges []T `json:"edges" example:"[{ 'userId': 1, 'name': 'Luffy' }]"`
+		Edges []T `json:"edges" example:"[{ 'accountID': 1, 'name': 'Luffy' }]"`
 	}
 )
 

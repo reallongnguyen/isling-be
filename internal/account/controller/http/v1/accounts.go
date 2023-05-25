@@ -6,12 +6,12 @@ import (
 	"net/http"
 	"strconv"
 
-	"github.com/labstack/echo/v4"
-
 	"isling-be/internal/account/controller/http/v1/dto"
 	"isling-be/internal/account/usecase"
 	common_entity "isling-be/internal/common/entity"
 	"isling-be/pkg/logger"
+
+	"github.com/labstack/echo/v4"
 )
 
 type AccountsRouter struct {
@@ -29,19 +29,19 @@ func NewAccountsRouter(e *echo.Group, accountUC usecase.AccountUsecase, log logg
 }
 
 func (router *AccountsRouter) getOne(c echo.Context) error {
-	accountIdParam := c.Param("accountId")
+	accountIDParam := c.Param("accountId")
 
-	accountId, err := strconv.Atoi(accountIdParam)
+	accountID, err := strconv.Atoi(accountIDParam)
 	if err != nil {
 		return common_entity.ResponseError(c, http.StatusBadRequest, err.Error())
 	}
 
-	account, err := router.accountUC.GetAccountByID(c.Request().Context(), common_entity.AccountId(accountId))
+	account, err := router.accountUC.GetAccountByID(c.Request().Context(), common_entity.AccountID(accountID))
 
 	if errors.Is(err, common_entity.ErrNoRows) {
-		router.log.Info("account has id %d not found", accountId)
+		router.log.Info("account has id %d not found", accountID)
 
-		return common_entity.ResponseError(c, http.StatusNotFound, fmt.Sprintf("user has id %d not found", accountId))
+		return common_entity.ResponseError(c, http.StatusNotFound, fmt.Sprintf("user has id %d not found", accountID))
 	}
 
 	if err != nil {

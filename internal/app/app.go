@@ -8,9 +8,7 @@ import (
 	"syscall"
 
 	"github.com/labstack/echo/v4"
-
 	"isling-be/config"
-
 	"isling-be/pkg/httpserver"
 	"isling-be/pkg/logger"
 	"isling-be/pkg/postgres"
@@ -29,7 +27,7 @@ func Run(cfg *config.Config) {
 
 	// HTTP Server
 	handler := echo.New()
-	configHttpServer(handler)
+	configHTTPServer(handler)
 	useModules(pg, l, handler)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 

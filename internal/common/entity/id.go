@@ -1,5 +1,5 @@
 package entity
 
 type (
-	AccountId int
+	AccountID int
 )

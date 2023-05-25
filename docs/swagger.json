@@ -10,6 +10,6 @@
         "version": "1.0"
     },
     "host": "https://api.isling.me",
-    "basePath": "/v1",
+    "basePath": "/v1.",
     "paths": {}
 }

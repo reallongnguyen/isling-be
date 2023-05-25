@@ -15,11 +15,7 @@ type CustomValidator struct {
 }
 
 func (cv *CustomValidator) Validate(i interface{}) error {
-	if err := cv.validator.Struct(i); err != nil {
-		return err
-	}
-
-	return nil
+	return cv.validator.Struct(i)
 }
 
 // Swagger spec:
@@ -31,8 +27,8 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 // @contact.email api@isling.me
 
 // @host https://api.isling.me
-// @BasePath /v1
-func configHttpServer(handler *echo.Echo) {
+// @BasePath /v1.
+func configHTTPServer(handler *echo.Echo) {
 	handler.Use(middleware.Logger())
 	handler.Use(middleware.Recover())
 	handler.Validator = &CustomValidator{validator: validator.New()}

@@ -13,13 +13,17 @@ import (
 
 type (
 	AccountUsecase interface {
-		GetAccountByID(context.Context, common_entity.AccountId) (*entity.AccountWithoutPass, error)
+		GetAccountByID(context.Context, common_entity.AccountID) (*entity.AccountWithoutPass, error)
 		CreateAccount(context.Context, request.CreateAccountReq) (*entity.AccountWithoutPass, error)
+	}
+
+	AuthUsecase interface {
+		GetTokenByPassword(context.Context, *request.GetTokenByPasswordRequest) (*request.GetTokenResponse, error)
 	}
 
 	AccountRepository interface {
 		FindByUsername(context.Context, string) (*entity.Account, error)
-		FindByID(context.Context, common_entity.AccountId) (*entity.Account, error)
+		FindByID(context.Context, common_entity.AccountID) (*entity.Account, error)
 		Store(context.Context, *entity.Account) (*entity.Account, error)
 	}
 )

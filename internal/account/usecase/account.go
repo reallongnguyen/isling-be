@@ -26,7 +26,7 @@ func NewAccountUC(repo AccountRepository, log logger.Interface) AccountUsecase {
 
 func (uc *AccountUC) CreateAccount(ctx context.Context, createUserDto request.CreateAccountReq) (*entity.AccountWithoutPass, error) {
 	// check user exist
-	usernameAvailable, err := uc.checkUsernameAvailable(ctx, createUserDto.Username)
+	usernameAvailable, err := uc.checkUsernameAvailable(ctx, createUserDto.Email)
 	if err != nil {
 		uc.log.Error("got error when checkUsernameAvailable" + err.Error())
 
@@ -34,7 +34,7 @@ func (uc *AccountUC) CreateAccount(ctx context.Context, createUserDto request.Cr
 	}
 
 	if !usernameAvailable {
-		uc.log.Info("username " + createUserDto.Username + " already registered")
+		uc.log.Info("username " + createUserDto.Email + " already registered")
 
 		return nil, common_entity.ErrDuplicated
 	}
@@ -46,10 +46,9 @@ func (uc *AccountUC) CreateAccount(ctx context.Context, createUserDto request.Cr
 		return nil, err
 	}
 
-	user := entity.NewAccount(0, createUserDto.Username, hashedPassword, time.Now(), time.Now())
+	user := entity.NewAccount(0, createUserDto.Email, hashedPassword, time.Now(), time.Now())
 
 	account, err := uc.repo.Store(ctx, &user)
-
 	if err != nil {
 		return nil, err
 	}
@@ -71,9 +70,8 @@ func (uc *AccountUC) checkUsernameAvailable(ctx context.Context, username string
 	return false, nil
 }
 
-func (uc *AccountUC) GetAccountByID(ctx context.Context, userId common_entity.AccountId) (*entity.AccountWithoutPass, error) {
-	account, err := uc.repo.FindByID(ctx, userId)
-
+func (uc *AccountUC) GetAccountByID(ctx context.Context, accountID common_entity.AccountID) (*entity.AccountWithoutPass, error) {
+	account, err := uc.repo.FindByID(ctx, accountID)
 	if err != nil {
 		return nil, err
 	}

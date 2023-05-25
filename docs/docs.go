@@ -25,7 +25,7 @@ const docTemplate = `{
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
 	Host:             "https://api.isling.me",
-	BasePath:         "/v1",
+	BasePath:         "/v1.",
 	Schemes:          []string{},
 	Title:            "Isling Open API",
 	Description:      "This is a Isling Open API.",

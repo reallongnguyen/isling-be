@@ -7,39 +7,39 @@ import (
 )
 
 type Account struct {
-	Id        common_entity.AccountId `json:"id" example:"1"`
-	Username  string                  `json:"username" example:"isling@isling.me"`
-	Password  string                  `json:"password" example:"wakaranai"`
-	CreatedAt time.Time               `json:"createdAt" example:"2022-12-12T12:12:12"`
-	UpdatedAt time.Time               `json:"updatedAt" example:"2022-12-12T12:12:12"`
+	ID                common_entity.AccountID `json:"id" example:"1"`
+	Email             string                  `json:"email" example:"isling@isling.me"`
+	EncryptedPassword string
+	CreatedAt         time.Time `json:"createdAt" example:"2022-12-12T12:12:12"`
+	UpdatedAt         time.Time `json:"updatedAt" example:"2022-12-12T12:12:12"`
 }
 
 func NewAccount(
-	id common_entity.AccountId,
-	username,
-	password string,
+	id common_entity.AccountID,
+	email,
+	encryptedPassword string,
 	createdAt, updatedAt time.Time,
 ) Account {
 	return Account{
-		Id:        id,
-		Username:  username,
-		Password:  password,
-		CreatedAt: createdAt,
-		UpdatedAt: updatedAt,
+		ID:                id,
+		Email:             email,
+		EncryptedPassword: encryptedPassword,
+		CreatedAt:         createdAt,
+		UpdatedAt:         updatedAt,
 	}
 }
 
 type AccountWithoutPass struct {
-	Id        common_entity.AccountId `json:"id" example:"1"`
-	Username  string                  `json:"username" example:"isling@isling.me"`
+	ID        common_entity.AccountID `json:"id" example:"1"`
+	Email     string                  `json:"email" example:"isling@isling.me"`
 	CreatedAt time.Time               `json:"createdAt" example:"2022-12-12T12:12:12"`
 	UpdatedAt time.Time               `json:"updatedAt" example:"2022-12-12T12:12:12"`
 }
 
 func (a *Account) ToAccountWithoutPass() *AccountWithoutPass {
 	return &AccountWithoutPass{
-		Id:        a.Id,
-		Username:  a.Username,
+		ID:        a.ID,
+		Email:     a.Email,
 		CreatedAt: a.CreatedAt,
 		UpdatedAt: a.UpdatedAt,
 	}
