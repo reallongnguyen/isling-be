@@ -36,7 +36,7 @@ func (ar *AuthRouter) GetToken(c echo.Context) error {
 	}
 
 	if err := c.Validate(getTokenByPasswordDTO); err != nil {
-		return common_entity.ResponseError(c, http.StatusBadRequest, "validation error")
+		return common_entity.ResponseError(c, http.StatusBadRequest, "validation error", []error{err})
 	}
 
 	token, err := ar.authUC.GetTokenByPassword(c.Request().Context(), getTokenByPasswordDTO.ToRequest())
@@ -44,11 +44,11 @@ func (ar *AuthRouter) GetToken(c echo.Context) error {
 	if err != nil {
 		switch {
 		case errors.Is(err, common_entity.ErrEmailPasswordNotMatch):
-			return common_entity.ResponseError(c, http.StatusUnauthorized, "sign in error")
+			return common_entity.ResponseError(c, http.StatusUnauthorized, "sign in error", []error{err})
 		case errors.Is(err, common_entity.ErrAccountNotFound):
-			return common_entity.ResponseError(c, http.StatusUnauthorized, "sign in error")
+			return common_entity.ResponseError(c, http.StatusUnauthorized, "sign in error", []error{err})
 		default:
-			return common_entity.ResponseError(c, http.StatusInternalServerError, "server error")
+			return common_entity.ResponseError(c, http.StatusInternalServerError, "server error", []error{err})
 		}
 	}
 

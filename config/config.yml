@@ -11,3 +11,7 @@ logger:
 
 postgres:
   pool_max: 2
+
+jwt:
+  audience: 'isling.me'
+  exp: 3600

@@ -23,8 +23,10 @@ import (
 // @BasePath /v1.
 func Register(pg *postgres.Postgres, l logger.Interface, handler *echo.Echo) {
 	accountRepo := repo.NewAccountRepo(pg)
+	refreshTokenRepo := repo.NewRefreshTokenRepo(pg)
+
 	accountUC := usecase.NewAccountUC(accountRepo, l)
-	authUC := usecase.NewAuthUsecase(l, accountRepo)
+	authUC := usecase.NewAuthUsecase(l, accountRepo, refreshTokenRepo)
 
 	groupV1 := handler.Group("/v1")
 

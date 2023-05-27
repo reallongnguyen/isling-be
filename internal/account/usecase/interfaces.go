@@ -26,4 +26,8 @@ type (
 		FindByID(context.Context, common_entity.AccountID) (*entity.Account, error)
 		Store(context.Context, *entity.Account) (*entity.Account, error)
 	}
+
+	RefreshTokenRepository interface {
+		Store(context.Context, *entity.RefreshTokens) (*entity.RefreshTokens, error)
+	}
 )

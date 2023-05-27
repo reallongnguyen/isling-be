@@ -2,7 +2,10 @@ package usecase
 
 import (
 	"context"
+	"crypto/sha512"
+	"encoding/base64"
 	"errors"
+	"fmt"
 	"isling-be/internal/account/entity"
 	"isling-be/internal/account/usecase/request"
 	common_entity "isling-be/internal/common/entity"
@@ -10,26 +13,29 @@ import (
 	"isling-be/pkg/logger"
 	"time"
 
+	"isling-be/config"
+
 	"github.com/golang-jwt/jwt/v5"
 	gonanoid "github.com/matoous/go-nanoid/v2"
 )
 
 const (
-	accessTokenExpiresIn = 3600
-	jwtSecretKey         = "isling.me"
-	audience             = "isling.me"
-	refreshTokenLength   = 48
+	refreshTokenLength = 48
 )
 
+var cfg, _ = config.NewConfig()
+
 type AuthUC struct {
-	log         logger.Interface
-	accountRepo AccountRepository
+	log              logger.Interface
+	accountRepo      AccountRepository
+	refreshTokenRepo RefreshTokenRepository
 }
 
-func NewAuthUsecase(log logger.Interface, accountRepo AccountRepository) AuthUsecase {
+func NewAuthUsecase(log logger.Interface, accountRepo AccountRepository, refreshTokenRepo RefreshTokenRepository) AuthUsecase {
 	return &AuthUC{
-		log:         log,
-		accountRepo: accountRepo,
+		log:              log,
+		accountRepo:      accountRepo,
+		refreshTokenRepo: refreshTokenRepo,
 	}
 }
 
@@ -37,28 +43,33 @@ func (authUC *AuthUC) GetTokenByPassword(c context.Context, credential *request.
 	account, err := authUC.accountRepo.FindByUsername(c, credential.Email)
 
 	if err != nil && errors.Is(err, common_entity.ErrNoRows) {
-		authUC.log.Warn("auth usecase: sign in error: not found email: %s", credential.Email)
+		authUC.log.Warn("auth usecase: get token by password: not found email: %s", credential.Email)
 
 		return nil, common_entity.ErrAccountNotFound
 	}
 
 	if err != nil {
-		authUC.log.Error("auth usecase: sign in error: unexpected error when find account: %s", err.Error())
-
-		return nil, err
+		return nil, fmt.Errorf("auth usecase: get token by password: find an account %w", err)
 	}
 
 	if !common_uc.IsMatchHashAndPassword(account.EncryptedPassword, credential.Password) {
-		authUC.log.Warn("auth usecase: sign in error: email password not match. Email: %s", credential.Email)
+		authUC.log.Warn("auth usecase: get token by password: email password not match. Email: %s", credential.Email)
 
 		return nil, common_entity.ErrEmailPasswordNotMatch
 	}
 
 	tokenRes, err := getTokenResponse(account)
 	if err != nil {
-		authUC.log.Error("auth usecase: sign in error: unexpected error when get token response: %s", err.Error())
+		return nil, fmt.Errorf("auth usecase: get token by password: get token: %w", err)
+	}
 
-		return nil, err
+	refreshToken := entity.RefreshTokens{
+		EncryptedToken: hashRefreshToken(tokenRes.RefreshToken),
+		AccountID:      account.ID,
+	}
+
+	if _, err := authUC.refreshTokenRepo.Store(c, &refreshToken); err != nil {
+		return nil, fmt.Errorf("auth usecase: get token by password: store refresh token: %w", err)
 	}
 
 	return tokenRes, nil
@@ -81,7 +92,7 @@ func getTokenResponse(account *entity.Account) (*request.GetTokenResponse, error
 		AccessToken:  accessToken,
 		RefreshToken: refreshToken,
 		TokenType:    "bearer",
-		ExpiresIn:    accessTokenExpiresIn,
+		ExpiresIn:    cfg.JWT.AccessTokenEXP,
 	}
 
 	return &tokenRes, nil
@@ -89,15 +100,15 @@ func getTokenResponse(account *entity.Account) (*request.GetTokenResponse, error
 
 func getAccessToken(account *entity.Account) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"aud":        []string{audience},
-		"exp":        time.Now().Add(accessTokenExpiresIn * time.Second).Unix(),
+		"aud":        []string{cfg.JWT.Audience},
+		"exp":        time.Now().Add(time.Duration(cfg.JWT.AccessTokenEXP) * time.Second).Unix(),
 		"iat":        time.Now().Unix(),
 		"iss":        "sign in",
 		"sub":        account.Email,
 		"account_id": account.ID,
 	})
 
-	tokenString, err := token.SignedString([]byte(jwtSecretKey))
+	tokenString, err := token.SignedString([]byte(cfg.JWT.JWTSecretKey))
 
 	if err != nil {
 		return "", err
@@ -108,4 +119,10 @@ func getAccessToken(account *entity.Account) (string, error) {
 
 func getRandomRefreshToken() (string, error) {
 	return gonanoid.New(refreshTokenLength)
+}
+
+func hashRefreshToken(refreshToken string) string {
+	bytes := sha512.Sum512([]byte(refreshToken))
+
+	return base64.StdEncoding.EncodeToString(bytes[:])
 }

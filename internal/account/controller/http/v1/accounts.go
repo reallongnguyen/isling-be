@@ -33,19 +33,20 @@ func (router *AccountsRouter) getOne(c echo.Context) error {
 
 	accountID, err := strconv.Atoi(accountIDParam)
 	if err != nil {
-		return common_entity.ResponseError(c, http.StatusBadRequest, err.Error())
+		return common_entity.ResponseError(c, http.StatusBadRequest, err.Error(), []error{err})
 	}
 
 	account, err := router.accountUC.GetAccountByID(c.Request().Context(), common_entity.AccountID(accountID))
 
+	// TODO: change err to ErrAccountNotFound
 	if errors.Is(err, common_entity.ErrNoRows) {
 		router.log.Info("account has id %d not found", accountID)
 
-		return common_entity.ResponseError(c, http.StatusNotFound, fmt.Sprintf("user has id %d not found", accountID))
+		return common_entity.ResponseError(c, http.StatusNotFound, fmt.Sprintf("user has id %d not found", accountID), []error{err})
 	}
 
 	if err != nil {
-		return common_entity.ResponseError(c, http.StatusInternalServerError, "server error")
+		return common_entity.ResponseError(c, http.StatusInternalServerError, "server error", []error{err})
 	}
 
 	return common_entity.ResponseSuccess(c, http.StatusOK, "success", account)
@@ -55,11 +56,11 @@ func (router *AccountsRouter) create(c echo.Context) error {
 	createAccountDto := dto.CreateAccountDto{}
 
 	if err := c.Bind(&createAccountDto); err != nil {
-		return common_entity.ResponseError(c, http.StatusBadRequest, err.Error())
+		return common_entity.ResponseError(c, http.StatusBadRequest, err.Error(), []error{err})
 	}
 
 	if err := c.Validate(createAccountDto); err != nil {
-		return common_entity.ResponseError(c, http.StatusBadRequest, err.Error())
+		return common_entity.ResponseError(c, http.StatusBadRequest, err.Error(), []error{err})
 	}
 
 	account, err := router.accountUC.CreateAccount(c.Request().Context(), createAccountDto.ToCreateAccountRequest())
@@ -70,7 +71,7 @@ func (router *AccountsRouter) create(c echo.Context) error {
 			code = http.StatusConflict
 		}
 
-		return common_entity.ResponseError(c, code, err.Error())
+		return common_entity.ResponseError(c, code, err.Error(), []error{err})
 	}
 
 	return common_entity.ResponseSuccess(c, http.StatusCreated, "create one user successfully", account)

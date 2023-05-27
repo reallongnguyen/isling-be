@@ -4,24 +4,31 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
+const (
+	errMsgsInitialCap = 1
+)
+
 type AppResponse[T any] struct {
-	Success bool   `json:"success" example:"true"`
-	Code    int    `json:"code" example:"200"`
-	Message string `json:"message" example:"SUCCESS"`
-	Data    T      `json:"data,omitempty" example:"{ 'accountID': 1, 'name': 'Luffy' }"`
+	Success bool     `json:"success" example:"true"`
+	Code    int      `json:"code" example:"200"`
+	Message string   `json:"message" example:"SUCCESS"`
+	Data    T        `json:"data,omitempty" example:"{ 'accountID': 1, 'name': 'Luffy' }"`
+	Errors  []string `json:"errors,omitempty"`
 }
 
-func ResponseError(c echo.Context, code int, msg string) error {
-	err := c.JSON(code, AppResponse[any]{
+func ResponseError(c echo.Context, code int, msg string, errs []error) error {
+	errMsgs := make([]string, 0, errMsgsInitialCap)
+
+	for _, err := range errs {
+		errMsgs = append(errMsgs, err.Error())
+	}
+
+	return c.JSON(code, AppResponse[any]{
 		Success: false,
 		Code:    code,
 		Message: msg,
+		Errors:  errMsgs,
 	})
-	if err != nil {
-		return err
-	}
-
-	return echo.NewHTTPError(code, msg)
 }
 
 func ResponseSuccess[T any](c echo.Context, code int, msg string, data T) error {
