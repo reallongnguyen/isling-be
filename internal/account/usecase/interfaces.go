@@ -19,6 +19,7 @@ type (
 
 	AuthUsecase interface {
 		GetTokenByPassword(context.Context, *request.GetTokenByPasswordRequest) (*request.GetTokenResponse, error)
+		Logout(context.Context, common_entity.AccountID, string) error
 	}
 
 	AccountRepository interface {
@@ -29,5 +30,7 @@ type (
 
 	RefreshTokenRepository interface {
 		Store(context.Context, *entity.RefreshTokens) (*entity.RefreshTokens, error)
+		RevokeManyByAccountID(context.Context, common_entity.AccountID) (int64, error)
+		RevokeOneByEncryptedToken(context.Context, string) (int64, error)
 	}
 )

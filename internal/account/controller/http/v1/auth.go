@@ -6,6 +6,7 @@ import (
 
 	"isling-be/internal/account/controller/http/v1/dto"
 	"isling-be/internal/account/usecase"
+	common_mw "isling-be/internal/common/controller/http/middleware"
 	common_entity "isling-be/internal/common/entity"
 	"isling-be/pkg/logger"
 
@@ -25,6 +26,7 @@ func NewAuthRouter(e *echo.Group, log logger.Interface, authUC usecase.AuthUseca
 
 	group := e.Group("/auth")
 	group.POST("/tokens", router.GetToken)
+	group.POST("/logout", router.Logout, common_mw.VerifyJWT())
 
 	return router
 }
@@ -53,4 +55,24 @@ func (ar *AuthRouter) GetToken(c echo.Context) error {
 	}
 
 	return common_entity.ResponseSuccess(c, http.StatusOK, "sign in successfully", dto.FromGetTokenRequestToDTO(token))
+}
+
+func (ar *AuthRouter) Logout(c echo.Context) error {
+	accountID, err := common_mw.GetAccountIDFromJWT(c)
+	if err != nil {
+		return common_entity.ResponseError(c, http.StatusBadRequest, "invalid JWT", []error{err})
+	}
+
+	refreshToken := c.QueryParam("refresh_token")
+
+	err = ar.authUC.Logout(c.Request().Context(), accountID, refreshToken)
+	if err != nil {
+		if errors.Is(err, common_entity.ErrRefreshTokenNotFound) {
+			return common_entity.ResponseError(c, http.StatusNotFound, "refresh token not found", []error{err})
+		}
+
+		return common_entity.ResponseError(c, http.StatusInternalServerError, "server error", []error{err})
+	}
+
+	return common_entity.ResponseSuccess(c, http.StatusOK, "logout success fully", "")
 }

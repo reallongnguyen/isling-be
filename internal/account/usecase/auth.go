@@ -31,6 +31,8 @@ type AuthUC struct {
 	refreshTokenRepo RefreshTokenRepository
 }
 
+var _ AuthUsecase = (*AuthUC)(nil)
+
 func NewAuthUsecase(log logger.Interface, accountRepo AccountRepository, refreshTokenRepo RefreshTokenRepository) AuthUsecase {
 	return &AuthUC{
 		log:              log,
@@ -73,6 +75,26 @@ func (authUC *AuthUC) GetTokenByPassword(c context.Context, credential *request.
 	}
 
 	return tokenRes, nil
+}
+
+func (authUC *AuthUC) Logout(c context.Context, accountID common_entity.AccountID, refreshToken string) error {
+	if refreshToken != "" {
+		rowAffected, err := authUC.refreshTokenRepo.RevokeOneByEncryptedToken(c, hashRefreshToken(refreshToken))
+
+		if err != nil {
+			return err
+		}
+
+		if rowAffected == 0 {
+			return common_entity.ErrRefreshTokenNotFound
+		}
+
+		return nil
+	}
+
+	_, err := authUC.refreshTokenRepo.RevokeManyByAccountID(c, accountID)
+
+	return err
 }
 
 func getTokenResponse(account *entity.Account) (*request.GetTokenResponse, error) {
