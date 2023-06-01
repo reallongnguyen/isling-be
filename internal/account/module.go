@@ -34,6 +34,6 @@ func Register(pg *postgres.Postgres, l logger.Interface, handler *echo.Echo) {
 
 	{
 		controller_v1.NewAccountsRouter(groupV1, accountUC, l)
-		controller_v1.NewAuthRouter(groupV1, l, authUC)
+		controller_v1.NewAuthRouter(groupV1, l, authUC, accountUC)
 	}
 }

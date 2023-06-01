@@ -70,8 +70,60 @@ func (authUC *AuthUC) GetTokenByPassword(c context.Context, credential *request.
 		AccountID:      account.ID,
 	}
 
-	if _, err := authUC.refreshTokenRepo.Store(c, &refreshToken); err != nil {
+	if _, err := authUC.refreshTokenRepo.Store(c, nil, &refreshToken); err != nil {
 		return nil, fmt.Errorf("auth usecase: get token by password: store refresh token: %w", err)
+	}
+
+	return tokenRes, nil
+}
+
+func (authUC *AuthUC) GetTokenByRefreshToken(c context.Context, credential *request.GetTokenByRefreshTokenRequest) (*request.GetTokenResponse, error) {
+	encryptedRefreshToken := hashRefreshToken(credential.RefreshToken)
+
+	refreshToken, err := authUC.refreshTokenRepo.FindOneByEncryptedToken(c, nil, encryptedRefreshToken)
+	if err != nil {
+		return nil, err
+	}
+
+	if refreshToken.Revoked {
+		return nil, common_entity.ErrRefreshTokenInvalid
+	}
+
+	account, err := authUC.accountRepo.FindByID(c, refreshToken.AccountID)
+	if err != nil {
+		return nil, err
+	}
+
+	tokenRes, err := getTokenResponse(account)
+	if err != nil {
+		return nil, fmt.Errorf("auth usecase: get token by refresh token: get token: %w", err)
+	}
+
+	// TODO: hide logic of transaction in use case
+	tx, err := authUC.refreshTokenRepo.BeginTx(c)
+	if err != nil {
+		return nil, fmt.Errorf("auth usecase: get token by refresh token: create transaction: %w", err)
+	}
+
+	if _, err := authUC.refreshTokenRepo.RevokeOneByEncryptedToken(c, tx, encryptedRefreshToken); err != nil {
+		tx.Rollback(c)
+
+		return nil, fmt.Errorf("auth usecase: get token by refresh token: revoke token: %w", err)
+	}
+
+	newRefreshToken := entity.RefreshTokens{
+		EncryptedToken: hashRefreshToken(tokenRes.RefreshToken),
+		AccountID:      account.ID,
+	}
+
+	if _, err := authUC.refreshTokenRepo.Store(c, tx, &newRefreshToken); err != nil {
+		tx.Rollback(c)
+
+		return nil, fmt.Errorf("auth usecase: get token by refresh token: store refresh token: %w", err)
+	}
+
+	if err = tx.Commit(c); err != nil {
+		return nil, fmt.Errorf("auth usecase: get token by refresh token: commit transaction: %w", err)
 	}
 
 	return tokenRes, nil
@@ -79,7 +131,7 @@ func (authUC *AuthUC) GetTokenByPassword(c context.Context, credential *request.
 
 func (authUC *AuthUC) Logout(c context.Context, accountID common_entity.AccountID, refreshToken string) error {
 	if refreshToken != "" {
-		rowAffected, err := authUC.refreshTokenRepo.RevokeOneByEncryptedToken(c, hashRefreshToken(refreshToken))
+		rowAffected, err := authUC.refreshTokenRepo.RevokeOneByEncryptedToken(c, nil, hashRefreshToken(refreshToken))
 
 		if err != nil {
 			return err
@@ -92,7 +144,7 @@ func (authUC *AuthUC) Logout(c context.Context, accountID common_entity.AccountI
 		return nil
 	}
 
-	_, err := authUC.refreshTokenRepo.RevokeManyByAccountID(c, accountID)
+	_, err := authUC.refreshTokenRepo.RevokeManyByAccountID(c, nil, accountID)
 
 	return err
 }

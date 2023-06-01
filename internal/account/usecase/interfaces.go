@@ -7,6 +7,8 @@ import (
 	"isling-be/internal/account/entity"
 	"isling-be/internal/account/usecase/request"
 	common_entity "isling-be/internal/common/entity"
+
+	"github.com/jackc/pgx/v4"
 )
 
 //go:generate mockgen -source=interfaces.go -destination=./mocks_test.go -package=usecase_test
@@ -19,6 +21,7 @@ type (
 
 	AuthUsecase interface {
 		GetTokenByPassword(context.Context, *request.GetTokenByPasswordRequest) (*request.GetTokenResponse, error)
+		GetTokenByRefreshToken(context.Context, *request.GetTokenByRefreshTokenRequest) (*request.GetTokenResponse, error)
 		Logout(context.Context, common_entity.AccountID, string) error
 	}
 
@@ -29,8 +32,10 @@ type (
 	}
 
 	RefreshTokenRepository interface {
-		Store(context.Context, *entity.RefreshTokens) (*entity.RefreshTokens, error)
-		RevokeManyByAccountID(context.Context, common_entity.AccountID) (int64, error)
-		RevokeOneByEncryptedToken(context.Context, string) (int64, error)
+		Store(context.Context, pgx.Tx, *entity.RefreshTokens) (*entity.RefreshTokens, error)
+		FindOneByEncryptedToken(context.Context, pgx.Tx, string) (*entity.RefreshTokens, error)
+		RevokeManyByAccountID(context.Context, pgx.Tx, common_entity.AccountID) (int64, error)
+		RevokeOneByEncryptedToken(context.Context, pgx.Tx, string) (int64, error)
+		BeginTx(context.Context) (pgx.Tx, error)
 	}
 )

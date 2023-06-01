@@ -2,9 +2,14 @@ package dto
 
 import "isling-be/internal/account/usecase/request"
 
+const (
+	GrantTypePassword     = "password"
+	GrantTypeRefreshToken = "refresh_token"
+)
+
 type GetTokenByPasswordRequestDTO struct {
-	Email    string `json:"email" validate:"required,email" example:"isling@isling.me"`
-	Password string `json:"password" validate:"required" example:"wakaranai"`
+	Email    string `validate:"required,email" example:"isling@isling.me"`
+	Password string `validate:"required" example:"wakaranai"`
 }
 
 type GetTokenResponseDTO struct {
@@ -27,5 +32,15 @@ func FromGetTokenRequestToDTO(req *request.GetTokenResponse) *GetTokenResponseDT
 		AccessToken:  req.AccessToken,
 		TokenType:    req.TokenType,
 		ExpiresIn:    req.ExpiresIn,
+	}
+}
+
+type GetTokenByRefreshTokenRequestDTO struct {
+	RefreshToken string `validate:"required" example:"himitsu"`
+}
+
+func (dto *GetTokenByRefreshTokenRequestDTO) ToRequest() *request.GetTokenByRefreshTokenRequest {
+	return &request.GetTokenByRefreshTokenRequest{
+		RefreshToken: dto.RefreshToken,
 	}
 }

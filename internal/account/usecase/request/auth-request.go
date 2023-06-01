@@ -11,3 +11,7 @@ type GetTokenResponse struct {
 	TokenType    string
 	ExpiresIn    int
 }
+
+type GetTokenByRefreshTokenRequest struct {
+	RefreshToken string
+}
