@@ -6,7 +6,7 @@ require (
 	github.com/Eun/go-hit v0.5.23
 	github.com/go-playground/validator/v10 v10.14.0
 	github.com/golang-jwt/jwt/v5 v5.0.0
-	github.com/golang-migrate/migrate/v4 v4.16.0
+	github.com/golang-migrate/migrate/v4 v4.16.1
 	github.com/ilyakaznacheev/cleanenv v1.4.2
 	github.com/jackc/pgtype v1.14.0
 	github.com/jackc/pgx/v4 v4.18.1
