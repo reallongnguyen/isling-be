@@ -26,6 +26,7 @@ func NewAccountsRouter(e *echo.Group, accountUC usecase.AccountUsecase, log logg
 	group.POST("", router.create)
 	group.GET("/:accountID", router.getOne)
 	group.GET("/me", router.getMyAccount)
+	group.PATCH("/me/password", router.getMyAccount)
 
 	return &router
 }

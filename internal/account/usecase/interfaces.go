@@ -15,8 +15,8 @@ import (
 
 type (
 	AccountUsecase interface {
-		GetAccountByID(context.Context, common_entity.AccountID) (*entity.AccountWithoutPass, error)
-		CreateAccount(context.Context, request.CreateAccountReq) (*entity.AccountWithoutPass, error)
+		GetAccountByID(context.Context, common_entity.AccountID) (*entity.Account, error)
+		CreateAccount(context.Context, request.CreateAccountReq) (*entity.Account, error)
 	}
 
 	AuthUsecase interface {

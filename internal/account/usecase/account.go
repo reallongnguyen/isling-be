@@ -24,7 +24,7 @@ func NewAccountUC(repo AccountRepository, log logger.Interface) AccountUsecase {
 	}
 }
 
-func (uc *AccountUC) CreateAccount(ctx context.Context, createUserDto request.CreateAccountReq) (*entity.AccountWithoutPass, error) {
+func (uc *AccountUC) CreateAccount(ctx context.Context, createUserDto request.CreateAccountReq) (*entity.Account, error) {
 	// check user exist
 	usernameAvailable, err := uc.checkUsernameAvailable(ctx, createUserDto.Email)
 	if err != nil {
@@ -53,7 +53,7 @@ func (uc *AccountUC) CreateAccount(ctx context.Context, createUserDto request.Cr
 		return nil, err
 	}
 
-	return account.ToAccountWithoutPass(), nil
+	return account, nil
 }
 
 func (uc *AccountUC) checkUsernameAvailable(ctx context.Context, username string) (bool, error) {
@@ -70,11 +70,11 @@ func (uc *AccountUC) checkUsernameAvailable(ctx context.Context, username string
 	return false, nil
 }
 
-func (uc *AccountUC) GetAccountByID(ctx context.Context, accountID common_entity.AccountID) (*entity.AccountWithoutPass, error) {
+func (uc *AccountUC) GetAccountByID(ctx context.Context, accountID common_entity.AccountID) (*entity.Account, error) {
 	account, err := uc.repo.FindByID(ctx, accountID)
 	if err != nil {
 		return nil, err
 	}
 
-	return account.ToAccountWithoutPass(), nil
+	return account, nil
 }
