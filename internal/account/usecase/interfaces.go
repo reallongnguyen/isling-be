@@ -17,6 +17,7 @@ type (
 	AccountUsecase interface {
 		GetAccountByID(context.Context, common_entity.AccountID) (*entity.Account, error)
 		CreateAccount(context.Context, request.CreateAccountReq) (*entity.Account, error)
+		ChangePassword(context.Context, common_entity.AccountID, *request.ChangePasswordReq) error
 	}
 
 	AuthUsecase interface {
@@ -29,6 +30,7 @@ type (
 		FindByUsername(context.Context, string) (*entity.Account, error)
 		FindByID(context.Context, common_entity.AccountID) (*entity.Account, error)
 		Store(context.Context, *entity.Account) (*entity.Account, error)
+		UpdateEncryptedPassword(context.Context, common_entity.AccountID, string) error
 	}
 
 	RefreshTokenRepository interface {

@@ -26,7 +26,7 @@ func NewAccountsRouter(e *echo.Group, accountUC usecase.AccountUsecase, log logg
 	group.POST("", router.create)
 	group.GET("/:accountID", router.getOne)
 	group.GET("/me", router.getMyAccount)
-	group.PATCH("/me/password", router.getMyAccount)
+	group.PATCH("/me/password", router.changePassword)
 
 	return &router
 }
@@ -100,4 +100,34 @@ func (router *AccountsRouter) getMyAccount(c echo.Context) error {
 	}
 
 	return common_entity.ResponseSuccess(c, http.StatusOK, "success", account)
+}
+
+func (router *AccountsRouter) changePassword(c echo.Context) error {
+	accountID, err := common_mw.GetAccountIDFromJWT(c)
+	if err != nil {
+		return common_entity.ResponseError(c, http.StatusBadRequest, err.Error(), []error{err})
+	}
+
+	changePasswordDTO := dto.ChangePasswordDto{}
+
+	if err := c.Bind(&changePasswordDTO); err != nil {
+		return common_entity.ResponseError(c, http.StatusBadRequest, "parse request body failed", []error{err})
+	}
+
+	if err := c.Validate(changePasswordDTO); err != nil {
+		return common_entity.ResponseError(c, http.StatusBadRequest, "validation failed", []error{err})
+	}
+
+	if err := router.accountUC.ChangePassword(c.Request().Context(), accountID, changePasswordDTO.ToChangePasswordRequest()); err != nil {
+		switch {
+		case errors.Is(err, common_entity.ErrAccountNotFound):
+			return common_entity.ResponseError(c, http.StatusBadRequest, "account not found", []error{err})
+		case errors.Is(err, common_entity.ErrPasswordNotCorrect):
+			return common_entity.ResponseError(c, http.StatusBadRequest, "old password not correct", []error{err})
+		default:
+			return common_entity.ResponseError(c, http.StatusInternalServerError, "server error", []error{err})
+		}
+	}
+
+	return common_entity.ResponseSuccess(c, http.StatusOK, "change password successfully", "")
 }

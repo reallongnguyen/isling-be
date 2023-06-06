@@ -13,4 +13,5 @@ var (
 	ErrNoRows                = errors.New("error no rows")
 	ErrRefreshTokenNotFound  = errors.New("refresh token not found")
 	ErrRefreshTokenInvalid   = errors.New("refresh token invalid")
+	ErrPasswordNotCorrect    = errors.New("password not correct")
 )

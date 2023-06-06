@@ -4,11 +4,12 @@ import (
 	"context"
 	"errors"
 
-	pgx "github.com/jackc/pgx/v4"
 	"isling-be/internal/account/entity"
 	"isling-be/internal/account/usecase"
 	common_entity "isling-be/internal/common/entity"
 	"isling-be/pkg/postgres"
+
+	pgx "github.com/jackc/pgx/v4"
 )
 
 type AccountRepo struct {
@@ -68,6 +69,18 @@ func (repo *AccountRepo) FindByID(ctx context.Context, accountID common_entity.A
 	`
 
 	return rowToAccount(repo.Pool.QueryRow(ctx, sql, accountID))
+}
+
+func (repo *AccountRepo) UpdateEncryptedPassword(ctx context.Context, accountID common_entity.AccountID, newEncryptedPassword string) error {
+	sql := `
+		UPDATE accounts
+		SET encrypted_password = $1
+		WHERE id = $2
+	`
+
+	_, err := repo.Pool.Exec(ctx, sql, newEncryptedPassword, accountID)
+
+	return err
 }
 
 func rowToAccount(row pgx.Row) (*entity.Account, error) {

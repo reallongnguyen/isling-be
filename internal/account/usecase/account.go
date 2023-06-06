@@ -3,6 +3,7 @@ package usecase
 import (
 	"context"
 	"errors"
+	"fmt"
 	"time"
 
 	"isling-be/internal/account/entity"
@@ -16,6 +17,8 @@ type AccountUC struct {
 	repo AccountRepository
 	log  logger.Interface
 }
+
+var _ AccountUsecase = (*AccountUC)(nil)
 
 func NewAccountUC(repo AccountRepository, log logger.Interface) AccountUsecase {
 	return &AccountUC{
@@ -77,4 +80,39 @@ func (uc *AccountUC) GetAccountByID(ctx context.Context, accountID common_entity
 	}
 
 	return account, nil
+}
+
+func (uc *AccountUC) ChangePassword(ctx context.Context, accountID common_entity.AccountID, changePassReq *request.ChangePasswordReq) error {
+	account, err := uc.repo.FindByID(ctx, accountID)
+
+	if err != nil && errors.Is(err, common_entity.ErrNoRows) {
+		uc.log.Warn("account usecase: change password: not found account ID: %s", accountID)
+
+		return common_entity.ErrAccountNotFound
+	}
+
+	if err != nil {
+		uc.log.Info("account usecase: change password: find one account: %w", err)
+
+		return fmt.Errorf("account usecase: change password: find an account %w", err)
+	}
+
+	if !common_uc.IsMatchHashAndPassword(account.EncryptedPassword, changePassReq.OldPassword) {
+		uc.log.Warn("account usecase: change password: password not correct. Account ID: %s", accountID)
+
+		return common_entity.ErrPasswordNotCorrect
+	}
+
+	newEncryptedPassword, err := common_uc.HashPassword(changePassReq.NewPassword)
+	if err != nil {
+		return fmt.Errorf("account usecase: change password: hash new password: %w", err)
+	}
+
+	if err := uc.repo.UpdateEncryptedPassword(ctx, accountID, newEncryptedPassword); err != nil {
+		uc.log.Info("account usecase: change password: update encrypted password: %w", err)
+
+		return err
+	}
+
+	return nil
 }
