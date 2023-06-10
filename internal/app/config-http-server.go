@@ -31,6 +31,7 @@ func (cv *CustomValidator) Validate(i interface{}) error {
 func configHTTPServer(handler *echo.Echo) {
 	handler.Use(middleware.Logger())
 	handler.Use(middleware.Recover())
+	handler.Use(middleware.CORS())
 	handler.Validator = &CustomValidator{validator: validator.New()}
 
 	handler.GET("/healthz", func(c echo.Context) error {

@@ -22,7 +22,7 @@ compose-down: ### Down docker-compose
 .PHONY: compose-down
 
 swag-v1: ### swag init
-	swag init -g internal/app/config_http_server.go
+	swag init -g internal/app/config-http-server.go
 .PHONY: swag-v1
 
 run: swag-v1 ### swag run
