@@ -26,6 +26,10 @@ type (
 		Logout(context.Context, common_entity.AccountID, string) error
 	}
 
+	ProfileUsecase interface {
+		GetProfile(context.Context, common_entity.AccountID) (*entity.Profile, error)
+	}
+
 	AccountRepository interface {
 		FindByUsername(context.Context, string) (*entity.Account, error)
 		FindByID(context.Context, common_entity.AccountID) (*entity.Account, error)
@@ -33,11 +37,16 @@ type (
 		UpdateEncryptedPassword(context.Context, common_entity.AccountID, string) error
 	}
 
+	// TODO: hide postgres transaction logic in interface
 	RefreshTokenRepository interface {
 		Store(context.Context, pgx.Tx, *entity.RefreshTokens) (*entity.RefreshTokens, error)
 		FindOneByEncryptedToken(context.Context, pgx.Tx, string) (*entity.RefreshTokens, error)
 		RevokeManyByAccountID(context.Context, pgx.Tx, common_entity.AccountID) (int64, error)
 		RevokeOneByEncryptedToken(context.Context, pgx.Tx, string) (int64, error)
 		BeginTx(context.Context) (pgx.Tx, error)
+	}
+
+	ProfileRepository interface {
+		FindOneProfileByID(context.Context, common_entity.AccountID) (*entity.Profile, error)
 	}
 )

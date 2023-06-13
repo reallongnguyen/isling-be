@@ -1,6 +1,6 @@
 CREATE TABLE IF NOT EXISTS refresh_tokens (
   id serial PRIMARY KEY,
-  account_id INTEGER NOT NULL REFERENCES accounts (id),
+  account_id INTEGER NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
   encrypted_token VARCHAR(256) NOT NULL,
   revoked BOOLEAN DEFAULT FALSE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL

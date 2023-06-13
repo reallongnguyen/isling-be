@@ -2,7 +2,6 @@ package v1
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -25,7 +24,6 @@ func NewAccountsRouter(e *echo.Group, accountUC usecase.AccountUsecase, log logg
 	group := e.Group("/accounts", common_mw.VerifyJWT())
 	group.POST("", router.create)
 	group.GET("/:accountID", router.getOne)
-	group.GET("/me", router.getMyAccount)
 	group.PATCH("/me/password", router.changePassword)
 
 	return &router
@@ -66,33 +64,10 @@ func (router *AccountsRouter) getOne(c echo.Context) error {
 
 	account, err := router.accountUC.GetAccountByID(c.Request().Context(), common_entity.AccountID(accountID))
 
-	// TODO: change err to ErrAccountNotFound
-	if errors.Is(err, common_entity.ErrNoRows) {
-		router.log.Info("account has id %d not found", accountID)
+	if errors.Is(err, common_entity.ErrAccountNotFound) {
+		router.log.Info("get one: account id %d not found", accountID)
 
-		return common_entity.ResponseError(c, http.StatusNotFound, fmt.Sprintf("user has id %d not found", accountID), []error{err})
-	}
-
-	if err != nil {
-		return common_entity.ResponseError(c, http.StatusInternalServerError, "server error", []error{err})
-	}
-
-	return common_entity.ResponseSuccess(c, http.StatusOK, "success", account)
-}
-
-func (router *AccountsRouter) getMyAccount(c echo.Context) error {
-	accountID, err := common_mw.GetAccountIDFromJWT(c)
-	if err != nil {
-		return common_entity.ResponseError(c, http.StatusBadRequest, err.Error(), []error{err})
-	}
-
-	account, err := router.accountUC.GetAccountByID(c.Request().Context(), common_entity.AccountID(accountID))
-
-	// TODO: change err to ErrAccountNotFound
-	if errors.Is(err, common_entity.ErrNoRows) {
-		router.log.Info("account has id %d not found", accountID)
-
-		return common_entity.ResponseError(c, http.StatusNotFound, fmt.Sprintf("user has id %d not found", accountID), []error{err})
+		return common_entity.ResponseError(c, http.StatusNotFound, "not found", []error{err})
 	}
 
 	if err != nil {

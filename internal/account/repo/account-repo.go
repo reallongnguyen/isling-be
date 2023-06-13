@@ -94,7 +94,7 @@ func rowToAccount(row pgx.Row) (*entity.Account, error) {
 	)
 
 	if errors.Is(err, pgx.ErrNoRows) {
-		return nil, common_entity.ErrNoRows
+		return nil, common_entity.ErrAccountNotFound
 	}
 
 	if err != nil {

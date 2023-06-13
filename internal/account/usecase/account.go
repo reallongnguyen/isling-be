@@ -74,12 +74,7 @@ func (uc *AccountUC) checkUsernameAvailable(ctx context.Context, username string
 }
 
 func (uc *AccountUC) GetAccountByID(ctx context.Context, accountID common_entity.AccountID) (*entity.Account, error) {
-	account, err := uc.repo.FindByID(ctx, accountID)
-	if err != nil {
-		return nil, err
-	}
-
-	return account, nil
+	return uc.repo.FindByID(ctx, accountID)
 }
 
 func (uc *AccountUC) ChangePassword(ctx context.Context, accountID common_entity.AccountID, changePassReq *request.ChangePasswordReq) error {

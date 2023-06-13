@@ -88,10 +88,8 @@ func (ar *AuthRouter) getTokenByPassword(c echo.Context) error {
 
 	if err != nil {
 		switch {
-		case errors.Is(err, common_entity.ErrEmailPasswordNotMatch):
-			return common_entity.ResponseError(c, http.StatusUnauthorized, "sign in error", []error{err})
-		case errors.Is(err, common_entity.ErrAccountNotFound):
-			return common_entity.ResponseError(c, http.StatusUnauthorized, "sign in error", []error{err})
+		case errors.Is(err, common_entity.ErrEmailPasswordNotMatch) || errors.Is(err, common_entity.ErrAccountNotFound):
+			return common_entity.ResponseError(c, http.StatusUnauthorized, "sign in error", []error{common_entity.ErrEmailPasswordNotMatch})
 		default:
 			return common_entity.ResponseError(c, http.StatusInternalServerError, "server error", []error{err})
 		}

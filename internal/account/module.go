@@ -24,9 +24,11 @@ import (
 func Register(pg *postgres.Postgres, l logger.Interface, handler *echo.Echo) {
 	accountRepo := repo.NewAccountRepo(pg)
 	refreshTokenRepo := repo.NewRefreshTokenRepo(pg)
+	profileRepo := repo.NewProfileRepo(pg)
 
 	accountUC := usecase.NewAccountUC(accountRepo, l)
 	authUC := usecase.NewAuthUsecase(l, accountRepo, refreshTokenRepo)
+	profileUC := usecase.NewProfileUC(profileRepo, l)
 
 	groupV1 := handler.Group("/v1")
 
@@ -34,6 +36,7 @@ func Register(pg *postgres.Postgres, l logger.Interface, handler *echo.Echo) {
 
 	{
 		controller_v1.NewAccountsRouter(groupV1, accountUC, l)
+		controller_v1.NewProfilesRouter(groupV1, profileUC, l)
 		controller_v1.NewAuthRouter(groupV1, l, authUC, accountUC)
 	}
 }
