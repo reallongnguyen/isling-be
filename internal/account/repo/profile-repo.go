@@ -3,9 +3,11 @@ package repo
 import (
 	"context"
 	"errors"
+	"strings"
 
 	"isling-be/internal/account/entity"
 	"isling-be/internal/account/usecase"
+	"isling-be/internal/account/usecase/request"
 	common_entity "isling-be/internal/common/entity"
 	"isling-be/pkg/postgres"
 
@@ -39,6 +41,25 @@ func (repo *ProfileRepo) FindOneProfileByID(ctx context.Context, accountID commo
 	`
 
 	return rowToProfile(repo.Pool.QueryRow(ctx, sql, accountID))
+}
+
+func (repo *ProfileRepo) CreateProfile(ctx context.Context, accountID common_entity.AccountID, createProfileReq *request.CreateProfileReq) (*entity.Profile, error) {
+	sql := `
+		INSERT INTO profiles (account_id, first_name, last_name, gender, date_of_birth)
+		VALUES ($1, $2, $3, $4, $5)
+	`
+
+	_, err := repo.Pool.Exec(ctx, sql, accountID, createProfileReq.FirstName, createProfileReq.LastName, createProfileReq.Gender, createProfileReq.DateOfBirth)
+
+	if err != nil {
+		if strings.Contains(err.Error(), "SQLSTATE 23505") {
+			return nil, common_entity.ErrAccountIDDuplicated
+		}
+
+		return nil, err
+	}
+
+	return repo.FindOneProfileByID(ctx, accountID)
 }
 
 func rowToProfile(row pgx.Row) (*entity.Profile, error) {

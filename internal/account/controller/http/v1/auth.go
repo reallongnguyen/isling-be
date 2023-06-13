@@ -27,36 +27,35 @@ func NewAuthRouter(e *echo.Group, log logger.Interface, authUC usecase.AuthUseca
 	}
 
 	group := e.Group("/auth")
-	group.POST("/signup", router.signup)
+	group.POST("/signup", router.signUp)
 	group.POST("/tokens", router.getToken)
 	group.POST("/logout", router.logout, common_mw.VerifyJWT())
 
 	return router
 }
 
-func (router *AuthRouter) signup(c echo.Context) error {
+func (router *AuthRouter) signUp(c echo.Context) error {
 	createAccountDto := dto.CreateAccountDto{}
 
 	if err := c.Bind(&createAccountDto); err != nil {
-		return common_entity.ResponseError(c, http.StatusBadRequest, err.Error(), []error{err})
+		return common_entity.ResponseError(c, http.StatusBadRequest, "bad request", []error{err})
 	}
 
 	if err := c.Validate(createAccountDto); err != nil {
-		return common_entity.ResponseError(c, http.StatusBadRequest, err.Error(), []error{err})
+		return common_entity.ResponseError(c, http.StatusBadRequest, "validation failed", []error{err})
 	}
 
-	account, err := router.accountUC.CreateAccount(c.Request().Context(), createAccountDto.ToCreateAccountRequest())
+	token, err := router.authUC.SignUp(c.Request().Context(), createAccountDto.ToCreateAccountRequest())
+
+	if errors.Is(err, common_entity.ErrEmailDuplicated) {
+		return common_entity.ResponseError(c, http.StatusBadRequest, "bad request", []error{err})
+	}
+
 	if err != nil {
-		code := http.StatusInternalServerError
-
-		if errors.Is(err, common_entity.ErrDuplicated) {
-			code = http.StatusConflict
-		}
-
-		return common_entity.ResponseError(c, code, err.Error(), []error{err})
+		return common_entity.ResponseError(c, http.StatusInternalServerError, "server error", []error{err})
 	}
 
-	return common_entity.ResponseSuccess(c, http.StatusCreated, "create one user successfully", account)
+	return common_entity.ResponseSuccess(c, http.StatusCreated, "sign up successfully", dto.FromGetTokenRequestToDTO(token))
 }
 
 func (ar *AuthRouter) getToken(c echo.Context) error {

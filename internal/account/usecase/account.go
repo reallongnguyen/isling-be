@@ -39,7 +39,7 @@ func (uc *AccountUC) CreateAccount(ctx context.Context, createUserDto request.Cr
 	if !usernameAvailable {
 		uc.log.Info("username " + createUserDto.Email + " already registered")
 
-		return nil, common_entity.ErrDuplicated
+		return nil, common_entity.ErrEmailDuplicated
 	}
 
 	hashedPassword, err := common_uc.HashPassword(createUserDto.Password)
@@ -62,7 +62,7 @@ func (uc *AccountUC) CreateAccount(ctx context.Context, createUserDto request.Cr
 func (uc *AccountUC) checkUsernameAvailable(ctx context.Context, username string) (bool, error) {
 	_, err := uc.repo.FindByUsername(ctx, username)
 
-	if errors.Is(err, common_entity.ErrNoRows) {
+	if errors.Is(err, common_entity.ErrAccountNotFound) {
 		return true, nil
 	}
 

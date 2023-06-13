@@ -5,8 +5,9 @@ import (
 )
 
 var (
+	ErrAccountIDDuplicated   = errors.New("account id duplicated")
 	ErrAccountNotFound       = errors.New("account not found")
-	ErrDuplicated            = errors.New("error duplicated")
+	ErrEmailDuplicated       = errors.New("email address duplicated")
 	ErrEmailPasswordNotMatch = errors.New("email password not match")
 	ErrGrantTypeInvalid      = errors.New("grant type must be 'password' or 'refresh_token'")
 	ErrInvalidJWT            = errors.New("invalid JWT")

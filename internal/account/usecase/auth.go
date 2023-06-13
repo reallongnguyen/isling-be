@@ -27,15 +27,17 @@ var cfg, _ = config.NewConfig()
 
 type AuthUC struct {
 	log              logger.Interface
+	accountUC        AccountUsecase
 	accountRepo      AccountRepository
 	refreshTokenRepo RefreshTokenRepository
 }
 
 var _ AuthUsecase = (*AuthUC)(nil)
 
-func NewAuthUsecase(log logger.Interface, accountRepo AccountRepository, refreshTokenRepo RefreshTokenRepository) AuthUsecase {
+func NewAuthUsecase(log logger.Interface, accountUC AccountUsecase, accountRepo AccountRepository, refreshTokenRepo RefreshTokenRepository) AuthUsecase {
 	return &AuthUC{
 		log:              log,
+		accountUC:        accountUC,
 		accountRepo:      accountRepo,
 		refreshTokenRepo: refreshTokenRepo,
 	}
@@ -147,6 +149,16 @@ func (authUC *AuthUC) Logout(c context.Context, accountID common_entity.AccountI
 	_, err := authUC.refreshTokenRepo.RevokeManyByAccountID(c, nil, accountID)
 
 	return err
+}
+
+func (authUC *AuthUC) SignUp(ctx context.Context, createUserDto request.CreateAccountReq) (*request.GetTokenResponse, error) {
+	acc, err := authUC.accountUC.CreateAccount(ctx, createUserDto)
+
+	if err != nil {
+		return nil, err
+	}
+
+	return getTokenResponse(acc)
 }
 
 func getTokenResponse(account *entity.Account) (*request.GetTokenResponse, error) {

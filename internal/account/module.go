@@ -27,7 +27,7 @@ func Register(pg *postgres.Postgres, l logger.Interface, handler *echo.Echo) {
 	profileRepo := repo.NewProfileRepo(pg)
 
 	accountUC := usecase.NewAccountUC(accountRepo, l)
-	authUC := usecase.NewAuthUsecase(l, accountRepo, refreshTokenRepo)
+	authUC := usecase.NewAuthUsecase(l, accountUC, accountRepo, refreshTokenRepo)
 	profileUC := usecase.NewProfileUC(profileRepo, l)
 
 	groupV1 := handler.Group("/v1")

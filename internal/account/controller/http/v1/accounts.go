@@ -44,7 +44,7 @@ func (router *AccountsRouter) create(c echo.Context) error {
 	if err != nil {
 		code := http.StatusInternalServerError
 
-		if errors.Is(err, common_entity.ErrDuplicated) {
+		if errors.Is(err, common_entity.ErrEmailDuplicated) {
 			code = http.StatusConflict
 		}
 

@@ -24,10 +24,12 @@ type (
 		GetTokenByPassword(context.Context, *request.GetTokenByPasswordRequest) (*request.GetTokenResponse, error)
 		GetTokenByRefreshToken(context.Context, *request.GetTokenByRefreshTokenRequest) (*request.GetTokenResponse, error)
 		Logout(context.Context, common_entity.AccountID, string) error
+		SignUp(context.Context, request.CreateAccountReq) (*request.GetTokenResponse, error)
 	}
 
 	ProfileUsecase interface {
 		GetProfile(context.Context, common_entity.AccountID) (*entity.Profile, error)
+		CreateProfile(context.Context, common_entity.AccountID, *request.CreateProfileReq) (*entity.Profile, error)
 	}
 
 	AccountRepository interface {
@@ -48,5 +50,6 @@ type (
 
 	ProfileRepository interface {
 		FindOneProfileByID(context.Context, common_entity.AccountID) (*entity.Profile, error)
+		CreateProfile(context.Context, common_entity.AccountID, *request.CreateProfileReq) (*entity.Profile, error)
 	}
 )

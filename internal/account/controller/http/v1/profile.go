@@ -4,6 +4,7 @@ import (
 	"errors"
 	"net/http"
 
+	"isling-be/internal/account/controller/http/v1/dto"
 	"isling-be/internal/account/usecase"
 	common_mw "isling-be/internal/common/controller/http/middleware"
 	common_entity "isling-be/internal/common/entity"
@@ -27,7 +28,30 @@ func NewProfilesRouter(e *echo.Group, profileUC usecase.ProfileUsecase, log logg
 }
 
 func (router *ProfilesRouter) create(c echo.Context) error {
-	return common_entity.ResponseSuccess(c, http.StatusCreated, "create one user successfully", "")
+	accountID, err := common_mw.GetAccountIDFromJWT(c)
+	if err != nil {
+		return common_entity.ResponseError(c, http.StatusBadRequest, err.Error(), []error{err})
+	}
+
+	createProfileDTO := dto.CreateProfileReqDTO{}
+	if err := c.Bind(&createProfileDTO); err != nil {
+		return common_entity.ResponseError(c, http.StatusBadRequest, "bad request", []error{err})
+	}
+
+	if err := c.Validate(createProfileDTO); err != nil {
+		return common_entity.ResponseError(c, http.StatusBadRequest, "validation failed", []error{err})
+	}
+
+	profile, err := router.profileUC.CreateProfile(c.Request().Context(), accountID, createProfileDTO.ToRequest())
+	if err != nil {
+		if errors.Is(err, common_entity.ErrAccountIDDuplicated) {
+			return common_entity.ResponseError(c, http.StatusBadRequest, "bad request", []error{err})
+		}
+
+		return common_entity.ResponseError(c, http.StatusInternalServerError, "server error", []error{err})
+	}
+
+	return common_entity.ResponseSuccess(c, http.StatusCreated, "create one user successfully", profile)
 }
 
 func (router *ProfilesRouter) getProfile(c echo.Context) error {
