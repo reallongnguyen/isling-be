@@ -27,6 +27,8 @@ func (uc *ProfileUC) GetProfile(ctx context.Context, accountID common_entity.Acc
 	return uc.repo.FindOneProfileByID(ctx, accountID)
 }
 
-func (uc *ProfileUC) CreateProfile(ctx context.Context, accountID common_entity.AccountID, createProfileReq *request.CreateProfileReq) (*entity.Profile, error) {
-	return uc.repo.CreateProfile(ctx, accountID, createProfileReq)
+func (uc *ProfileUC) UpsertProfile(ctx context.Context, accountID common_entity.AccountID, createProfileReq *request.CreateProfileReq) (*entity.Profile, error) {
+	createProfileReq.Normalize()
+
+	return uc.repo.UpsertProfile(ctx, accountID, createProfileReq)
 }

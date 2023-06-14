@@ -44,6 +44,8 @@ func NewAuthUsecase(log logger.Interface, accountUC AccountUsecase, accountRepo 
 }
 
 func (authUC *AuthUC) GetTokenByPassword(c context.Context, credential *request.GetTokenByPasswordRequest) (*request.GetTokenResponse, error) {
+	credential.Normalize()
+
 	account, err := authUC.accountRepo.FindByUsername(c, credential.Email)
 
 	if err != nil && errors.Is(err, common_entity.ErrNoRows) {
@@ -107,7 +109,7 @@ func (authUC *AuthUC) GetTokenByRefreshToken(c context.Context, credential *requ
 		return nil, fmt.Errorf("auth usecase: get token by refresh token: create transaction: %w", err)
 	}
 
-	if _, err := authUC.refreshTokenRepo.RevokeOneByEncryptedToken(c, tx, encryptedRefreshToken); err != nil {
+	if _, err = authUC.refreshTokenRepo.RevokeOneByEncryptedToken(c, tx, encryptedRefreshToken); err != nil {
 		tx.Rollback(c)
 
 		return nil, fmt.Errorf("auth usecase: get token by refresh token: revoke token: %w", err)
@@ -118,7 +120,7 @@ func (authUC *AuthUC) GetTokenByRefreshToken(c context.Context, credential *requ
 		AccountID:      account.ID,
 	}
 
-	if _, err := authUC.refreshTokenRepo.Store(c, tx, &newRefreshToken); err != nil {
+	if _, err = authUC.refreshTokenRepo.Store(c, tx, &newRefreshToken); err != nil {
 		tx.Rollback(c)
 
 		return nil, fmt.Errorf("auth usecase: get token by refresh token: store refresh token: %w", err)

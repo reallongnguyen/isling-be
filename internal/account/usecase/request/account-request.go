@@ -1,5 +1,7 @@
 package request
 
+import "strings"
+
 type (
 	CreateAccountReq struct {
 		Email    string
@@ -11,3 +13,9 @@ type (
 		NewPassword string
 	}
 )
+
+func (req *CreateAccountReq) Normalize() *CreateAccountReq {
+	req.Email = strings.ToLower(req.Email)
+
+	return req
+}

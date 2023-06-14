@@ -34,15 +34,15 @@ func (router *ProfilesRouter) create(c echo.Context) error {
 	}
 
 	createProfileDTO := dto.CreateProfileReqDTO{}
-	if err := c.Bind(&createProfileDTO); err != nil {
+	if err = c.Bind(&createProfileDTO); err != nil {
 		return common_entity.ResponseError(c, http.StatusBadRequest, "bad request", []error{err})
 	}
 
-	if err := c.Validate(createProfileDTO); err != nil {
+	if err = c.Validate(createProfileDTO); err != nil {
 		return common_entity.ResponseError(c, http.StatusBadRequest, "validation failed", []error{err})
 	}
 
-	profile, err := router.profileUC.CreateProfile(c.Request().Context(), accountID, createProfileDTO.ToRequest())
+	profile, err := router.profileUC.UpsertProfile(c.Request().Context(), accountID, createProfileDTO.ToRequest())
 	if err != nil {
 		if errors.Is(err, common_entity.ErrAccountIDDuplicated) {
 			return common_entity.ResponseError(c, http.StatusBadRequest, "bad request", []error{err})
@@ -51,7 +51,7 @@ func (router *ProfilesRouter) create(c echo.Context) error {
 		return common_entity.ResponseError(c, http.StatusInternalServerError, "server error", []error{err})
 	}
 
-	return common_entity.ResponseSuccess(c, http.StatusCreated, "create one user successfully", profile)
+	return common_entity.ResponseSuccess(c, http.StatusCreated, "upsert profile successfully", profile)
 }
 
 func (router *ProfilesRouter) getProfile(c echo.Context) error {

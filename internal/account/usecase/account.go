@@ -27,9 +27,11 @@ func NewAccountUC(repo AccountRepository, log logger.Interface) AccountUsecase {
 	}
 }
 
-func (uc *AccountUC) CreateAccount(ctx context.Context, createUserDto request.CreateAccountReq) (*entity.Account, error) {
+func (uc *AccountUC) CreateAccount(ctx context.Context, createAccountReq request.CreateAccountReq) (*entity.Account, error) {
+	createAccountReq.Normalize()
+
 	// check user exist
-	usernameAvailable, err := uc.checkUsernameAvailable(ctx, createUserDto.Email)
+	usernameAvailable, err := uc.checkUsernameAvailable(ctx, createAccountReq.Email)
 	if err != nil {
 		uc.log.Error("got error when checkUsernameAvailable" + err.Error())
 
@@ -37,19 +39,19 @@ func (uc *AccountUC) CreateAccount(ctx context.Context, createUserDto request.Cr
 	}
 
 	if !usernameAvailable {
-		uc.log.Info("username " + createUserDto.Email + " already registered")
+		uc.log.Info("username " + createAccountReq.Email + " already registered")
 
 		return nil, common_entity.ErrEmailDuplicated
 	}
 
-	hashedPassword, err := common_uc.HashPassword(createUserDto.Password)
+	hashedPassword, err := common_uc.HashPassword(createAccountReq.Password)
 	if err != nil {
 		uc.log.Info("hash password got error:" + err.Error())
 
 		return nil, err
 	}
 
-	user := entity.NewAccount(0, createUserDto.Email, hashedPassword, time.Now(), time.Now())
+	user := entity.NewAccount(0, createAccountReq.Email, hashedPassword, time.Now(), time.Now())
 
 	account, err := uc.repo.Store(ctx, &user)
 	if err != nil {

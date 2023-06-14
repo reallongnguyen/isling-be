@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS profiles (
   id SERIAL PRIMARY KEY,
   account_id INTEGER UNIQUE NOT NULL REFERENCES accounts (id) ON DELETE CASCADE,
   first_name VARCHAR(64) NOT NULL,
-  last_name VARCHAR(64) NOT NULL,
+  last_name VARCHAR(64),
   gender gender_identity NOT NULL,
   date_of_birth DATE NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW() NOT NULL,

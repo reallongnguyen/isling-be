@@ -58,7 +58,7 @@ func (router *AuthRouter) signUp(c echo.Context) error {
 	return common_entity.ResponseSuccess(c, http.StatusCreated, "sign up successfully", dto.FromGetTokenRequestToDTO(token))
 }
 
-func (ar *AuthRouter) getToken(c echo.Context) error {
+func (router *AuthRouter) getToken(c echo.Context) error {
 	grantType := c.QueryParam("grant_type")
 	if grantType != dto.GrantTypePassword && grantType != dto.GrantTypeRefreshToken {
 		err := common_entity.ErrGrantTypeInvalid
@@ -67,13 +67,13 @@ func (ar *AuthRouter) getToken(c echo.Context) error {
 	}
 
 	if grantType == dto.GrantTypePassword {
-		return ar.getTokenByPassword(c)
+		return router.getTokenByPassword(c)
 	}
 
-	return ar.getTokenByRefreshToken(c)
+	return router.getTokenByRefreshToken(c)
 }
 
-func (ar *AuthRouter) getTokenByPassword(c echo.Context) error {
+func (router *AuthRouter) getTokenByPassword(c echo.Context) error {
 	getTokenByPasswordDTO := dto.GetTokenByPasswordRequestDTO{
 		Email:    c.QueryParam("email"),
 		Password: c.QueryParam("password"),
@@ -83,7 +83,7 @@ func (ar *AuthRouter) getTokenByPassword(c echo.Context) error {
 		return common_entity.ResponseError(c, http.StatusBadRequest, "validation error", []error{err})
 	}
 
-	token, err := ar.authUC.GetTokenByPassword(c.Request().Context(), getTokenByPasswordDTO.ToRequest())
+	token, err := router.authUC.GetTokenByPassword(c.Request().Context(), getTokenByPasswordDTO.ToRequest())
 
 	if err != nil {
 		switch {
@@ -97,7 +97,7 @@ func (ar *AuthRouter) getTokenByPassword(c echo.Context) error {
 	return common_entity.ResponseSuccess(c, http.StatusOK, "sign in successfully", dto.FromGetTokenRequestToDTO(token))
 }
 
-func (ar *AuthRouter) getTokenByRefreshToken(c echo.Context) error {
+func (router *AuthRouter) getTokenByRefreshToken(c echo.Context) error {
 	refreshTokenCredential := dto.GetTokenByRefreshTokenRequestDTO{
 		RefreshToken: c.QueryParam("refresh_token"),
 	}
@@ -106,7 +106,7 @@ func (ar *AuthRouter) getTokenByRefreshToken(c echo.Context) error {
 		return common_entity.ResponseError(c, http.StatusBadRequest, "validation error", []error{err})
 	}
 
-	token, err := ar.authUC.GetTokenByRefreshToken(c.Request().Context(), refreshTokenCredential.ToRequest())
+	token, err := router.authUC.GetTokenByRefreshToken(c.Request().Context(), refreshTokenCredential.ToRequest())
 
 	if err != nil {
 		switch {
@@ -122,7 +122,7 @@ func (ar *AuthRouter) getTokenByRefreshToken(c echo.Context) error {
 	return common_entity.ResponseSuccess(c, http.StatusOK, "get access token successfully", dto.FromGetTokenRequestToDTO(token))
 }
 
-func (ar *AuthRouter) logout(c echo.Context) error {
+func (router *AuthRouter) logout(c echo.Context) error {
 	accountID, err := common_mw.GetAccountIDFromJWT(c)
 	if err != nil {
 		return common_entity.ResponseError(c, http.StatusBadRequest, "invalid JWT", []error{err})
@@ -130,7 +130,7 @@ func (ar *AuthRouter) logout(c echo.Context) error {
 
 	refreshToken := c.QueryParam("refresh_token")
 
-	err = ar.authUC.Logout(c.Request().Context(), accountID, refreshToken)
+	err = router.authUC.Logout(c.Request().Context(), accountID, refreshToken)
 	if err != nil {
 		if errors.Is(err, common_entity.ErrRefreshTokenNotFound) {
 			return common_entity.ResponseError(c, http.StatusNotFound, "refresh token not found", []error{err})

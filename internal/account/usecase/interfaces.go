@@ -29,7 +29,7 @@ type (
 
 	ProfileUsecase interface {
 		GetProfile(context.Context, common_entity.AccountID) (*entity.Profile, error)
-		CreateProfile(context.Context, common_entity.AccountID, *request.CreateProfileReq) (*entity.Profile, error)
+		UpsertProfile(context.Context, common_entity.AccountID, *request.CreateProfileReq) (*entity.Profile, error)
 	}
 
 	AccountRepository interface {
@@ -50,6 +50,6 @@ type (
 
 	ProfileRepository interface {
 		FindOneProfileByID(context.Context, common_entity.AccountID) (*entity.Profile, error)
-		CreateProfile(context.Context, common_entity.AccountID, *request.CreateProfileReq) (*entity.Profile, error)
+		UpsertProfile(context.Context, common_entity.AccountID, *request.CreateProfileReq) (*entity.Profile, error)
 	}
 )

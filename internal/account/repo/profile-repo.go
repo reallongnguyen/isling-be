@@ -43,10 +43,12 @@ func (repo *ProfileRepo) FindOneProfileByID(ctx context.Context, accountID commo
 	return rowToProfile(repo.Pool.QueryRow(ctx, sql, accountID))
 }
 
-func (repo *ProfileRepo) CreateProfile(ctx context.Context, accountID common_entity.AccountID, createProfileReq *request.CreateProfileReq) (*entity.Profile, error) {
+func (repo *ProfileRepo) UpsertProfile(ctx context.Context, accountID common_entity.AccountID, createProfileReq *request.CreateProfileReq) (*entity.Profile, error) {
 	sql := `
 		INSERT INTO profiles (account_id, first_name, last_name, gender, date_of_birth)
 		VALUES ($1, $2, $3, $4, $5)
+		ON CONFLICT (account_id)
+		DO UPDATE SET first_name = $2, last_name = $3, gender = $4, date_of_birth = $5
 	`
 
 	_, err := repo.Pool.Exec(ctx, sql, accountID, createProfileReq.FirstName, createProfileReq.LastName, createProfileReq.Gender, createProfileReq.DateOfBirth)
