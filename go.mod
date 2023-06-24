@@ -4,7 +4,7 @@ go 1.20
 
 require (
 	github.com/Eun/go-hit v0.5.23
-	github.com/go-playground/validator/v10 v10.14.0
+	github.com/go-playground/validator/v10 v10.14.1
 	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/golang-migrate/migrate/v4 v4.16.0
 	github.com/gosimple/slug v1.13.1
