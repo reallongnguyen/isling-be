@@ -63,7 +63,7 @@ mock: ### run mockery
 .PHONY: mock
 
 migrate-create:  ### create new migration
-	migrate create -ext sql -dir migrations 'migrate_name'
+	migrate create -ext sql -dir migrations '$(name)'
 .PHONY: migrate-create
 
 migrate-up: ### migration up

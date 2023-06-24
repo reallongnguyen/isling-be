@@ -60,12 +60,12 @@ func (router *ProfilesRouter) getProfile(c echo.Context) error {
 		return common_entity.ResponseError(c, http.StatusBadRequest, err.Error(), []error{err})
 	}
 
-	profile, err := router.profileUC.GetProfile(c.Request().Context(), common_entity.AccountID(accountID))
+	profile, err := router.profileUC.GetProfile(c.Request().Context(), accountID)
 
 	if errors.Is(err, common_entity.ErrAccountNotFound) {
 		router.log.Info("get profile: account id %d not found", accountID)
 
-		return common_entity.ResponseError(c, http.StatusNotFound, "not found", []error{err})
+		return common_entity.ResponseError(c, http.StatusUnauthorized, "invalid account", []error{err})
 	}
 
 	if err != nil {
