@@ -2,9 +2,17 @@ package repo
 
 import (
 	"context"
+	"errors"
+	common_entity "isling-be/internal/common/entity"
 	"isling-be/internal/play-isling/entity"
 	"isling-be/internal/play-isling/usecase"
 	"isling-be/pkg/postgres"
+
+	"github.com/jackc/pgx/v4"
+)
+
+const (
+	initialSliceCap = 16
 )
 
 type RoomRepo struct {
@@ -45,4 +53,191 @@ func (repo *RoomRepo) Create(c context.Context, room *entity.Room) (*entity.Room
 	}
 
 	return room, nil
+}
+
+func (repo *RoomRepo) FindMany(c context.Context, filter *usecase.FindRoomFilter) (*common_entity.Collection[*entity.Room], error) {
+	sql := `
+		SELECT
+			id,
+			owner_id,
+			visibility,
+			invite_code,
+			name,
+			slug,
+			description,
+			cover,
+			audience_count,
+			audiences,
+			created_at,
+			updated_at
+		FROM media_rooms
+		WHERE owner_id = $1
+		ORDER BY name ASC
+	`
+
+	rooms := make([]*entity.Room, 0, initialSliceCap)
+
+	room := entity.Room{}
+
+	_, err := repo.Pool.QueryFunc(
+		c,
+		sql,
+		[]interface{}{filter.OwnerID},
+		[]interface{}{
+			&room.ID,
+			&room.OwnerID,
+			&room.Visibility,
+			&room.InviteCode,
+			&room.Name,
+			&room.Slug,
+			&room.Description,
+			&room.Cover,
+			&room.AudienceCount,
+			&room.Audiences,
+			&room.CreatedAt,
+			&room.UpdatedAt,
+		},
+		func(pgx.QueryFuncRow) error {
+			newRoom := room
+			newRoom.Audiences = append(newRoom.Audiences, room.Audiences...)
+
+			rooms = append(rooms, &newRoom)
+
+			return nil
+		},
+	)
+	if err != nil {
+		return nil, err
+	}
+
+	roomCollection := common_entity.NewCollection(rooms, 0, len(rooms), len(rooms))
+
+	return &roomCollection, nil
+}
+
+func (repo *RoomRepo) FindOne(c context.Context, id int64) (*entity.Room, error) {
+	sql := `
+		SELECT
+			id,
+			owner_id,
+			visibility,
+			invite_code,
+			name,
+			slug,
+			description,
+			cover,
+			audience_count,
+			audiences,
+			created_at,
+			updated_at
+		FROM media_rooms
+		WHERE id = $1
+	`
+
+	row := repo.Pool.QueryRow(c, sql, id)
+
+	return rowToRoom(row)
+}
+
+func (repo *RoomRepo) FindOneBySlug(c context.Context, slug string) (*entity.Room, error) {
+	sql := `
+		SELECT
+			id,
+			owner_id,
+			visibility,
+			invite_code,
+			name,
+			slug,
+			description,
+			cover,
+			audience_count,
+			audiences,
+			created_at,
+			updated_at
+		FROM media_rooms
+		WHERE slug = $1
+	`
+
+	row := repo.Pool.QueryRow(c, sql, slug)
+
+	return rowToRoom(row)
+}
+
+func (repo *RoomRepo) UpdateOne(c context.Context, room *entity.Room) (*entity.Room, error) {
+	sql := `
+		UPDATE media_rooms
+		SET 
+			owner_id = $2,
+			visibility = $3,
+			invite_code = $4,
+			name = $5,
+			slug = $6,
+			description = $7,
+			cover = $8,
+			audience_count = $9,
+			audiences = $10
+		WHERE id = $1
+		RETURNING
+			updated_at
+	`
+
+	row := repo.Pool.QueryRow(
+		c,
+		sql,
+		room.ID,
+		room.OwnerID,
+		room.Visibility,
+		room.InviteCode,
+		room.Name,
+		room.Slug,
+		room.Description,
+		room.Cover,
+		room.AudienceCount,
+		room.Audiences,
+	)
+
+	newRoom := *room
+
+	err := row.Scan(&newRoom.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+
+	return &newRoom, nil
+}
+
+func (repo *RoomRepo) DeleteOne(c context.Context, id int64) error {
+	sql := `
+		DELETE FROM media_rooms
+		WHERE id = $1
+	`
+
+	_, err := repo.Pool.Exec(c, sql, id)
+
+	return err
+}
+
+func rowToRoom(row pgx.Row) (*entity.Room, error) {
+	room := entity.Room{}
+
+	err := row.Scan(
+		&room.ID,
+		&room.OwnerID,
+		&room.Visibility,
+		&room.InviteCode,
+		&room.Name,
+		&room.Slug,
+		&room.Description,
+		&room.Cover,
+		&room.AudienceCount,
+		&room.Audiences,
+		&room.CreatedAt,
+		&room.UpdatedAt,
+	)
+
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, entity.ErrRoomNotFound
+	}
+
+	return &room, nil
 }

@@ -25,6 +25,17 @@ func VerifyJWT() echo.MiddlewareFunc {
 	})
 }
 
+func ParseJWT() echo.MiddlewareFunc {
+	return echo_jwt.WithConfig(echo_jwt.Config{
+		SigningKey: []byte(cfg.JWT.JWTSecretKey),
+		ErrorHandler: func(c echo.Context, err error) error {
+			return nil
+		},
+		ContinueOnIgnoredError: true,
+		ContextKey:             "account",
+	})
+}
+
 func GetAccountIDFromJWT(c echo.Context) (entity.AccountID, error) {
 	account, ok := c.Get("account").(*jwt.Token)
 	if !ok {

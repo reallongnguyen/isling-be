@@ -15,3 +15,17 @@ func (dto *CreateRoomDTO) ToCreateRoomReq() *usecase.CreateRoomRequest {
 		Cover:       dto.Cover,
 	}
 }
+
+type UpdateRoomDTO struct {
+	Name        string `json:"name" validate:"required,max=256"`
+	Description string `json:"description" validate:"max=512"`
+	Cover       string `json:"cover" validate:"required,max=256,http_url"`
+}
+
+func (dto *UpdateRoomDTO) ToUpdateRoomReq() *usecase.UpdateRoomRequest {
+	return &usecase.UpdateRoomRequest{
+		Name:        dto.Name,
+		Description: dto.Description,
+		Cover:       dto.Cover,
+	}
+}
