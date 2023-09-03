@@ -21,12 +21,12 @@ import (
 
 // @host https://api.isling.me
 // @BasePath /v1.
-func Register(pg *postgres.Postgres, l logger.Interface, handler *echo.Echo) {
+func Register(pg *postgres.Postgres, l logger.Interface, handler *echo.Echo, msgBus *map[string]chan string) {
 	accountRepo := repo.NewAccountRepo(pg)
 	refreshTokenRepo := repo.NewRefreshTokenRepo(pg)
 	profileRepo := repo.NewProfileRepo(pg)
 
-	accountUC := usecase.NewAccountUC(accountRepo, l)
+	accountUC := usecase.NewAccountUC(accountRepo, l, msgBus)
 	authUC := usecase.NewAuthUsecase(l, accountUC, accountRepo, refreshTokenRepo)
 	profileUC := usecase.NewProfileUC(profileRepo, l)
 

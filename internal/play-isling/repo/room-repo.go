@@ -7,6 +7,8 @@ import (
 	"isling-be/internal/play-isling/entity"
 	"isling-be/internal/play-isling/usecase"
 	"isling-be/pkg/postgres"
+	"strconv"
+	"strings"
 
 	"github.com/jackc/pgx/v4"
 )
@@ -55,7 +57,34 @@ func (repo *RoomRepo) Create(c context.Context, room *entity.Room) (*entity.Room
 	return room, nil
 }
 
-func (repo *RoomRepo) FindMany(c context.Context, filter *usecase.FindRoomFilter) (*common_entity.Collection[*entity.Room], error) {
+func (repo *RoomRepo) FindMany(c context.Context, filter *usecase.FindRoomFilter, order *usecase.Order) (*common_entity.Collection[*entity.Room], error) {
+	binds := make([]interface{}, 0, 0)
+	whereConditions := make([]string, 0, 0)
+
+	if filter != nil {
+		if filter.OwnerID != nil {
+			binds = append(binds, filter.OwnerID)
+			whereConditions = append(whereConditions, "owner_id = $"+strconv.Itoa(len(binds)))
+		}
+
+		if filter.IDIn != nil {
+			binds = append(binds, filter.IDIn)
+			whereConditions = append(whereConditions, "id = ANY($"+strconv.Itoa(len(binds))+")")
+		}
+	}
+
+	if len(whereConditions) == 0 {
+		whereConditions = append(whereConditions, "TRUE")
+	}
+
+	whereClause := strings.Join(whereConditions, " AND ")
+
+	orderClause := "id DESC"
+
+	if order != nil {
+		orderClause = order.Field + " " + order.Direction + ", id DESC"
+	}
+
 	sql := `
 		SELECT
 			id,
@@ -71,8 +100,8 @@ func (repo *RoomRepo) FindMany(c context.Context, filter *usecase.FindRoomFilter
 			created_at,
 			updated_at
 		FROM media_rooms
-		WHERE owner_id = $1
-		ORDER BY name ASC
+		WHERE ` + whereClause + `
+		ORDER BY ` + orderClause + `
 	`
 
 	rooms := make([]*entity.Room, 0, initialSliceCap)
@@ -82,7 +111,7 @@ func (repo *RoomRepo) FindMany(c context.Context, filter *usecase.FindRoomFilter
 	_, err := repo.Pool.QueryFunc(
 		c,
 		sql,
-		[]interface{}{filter.OwnerID},
+		binds,
 		[]interface{}{
 			&room.ID,
 			&room.OwnerID,

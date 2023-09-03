@@ -1,8 +1,6 @@
 package config
 
 import (
-	"fmt"
-
 	"github.com/ilyakaznacheev/cleanenv"
 )
 
@@ -35,29 +33,32 @@ type (
 	// PG -.
 	PG struct {
 		PoolMax int    `env-required:"true" yaml:"pool_max" env:"PG_POOL_MAX"`
-		URL     string `env-required:"true"                 env:"PG_URL"`
+		URL     string `env-required:"true" yaml:"url"      env:"PG_URL"`
 	}
 
 	JWT struct {
-		AccessTokenEXP int    `env-required:"true" yaml:"exp" env:"JWT_EXP"`
-		JWTSecretKey   string `env-required:"true" env:"JWT_SECRET_KEY"`
+		AccessTokenEXP int    `env-required:"true" yaml:"exp"      env:"JWT_EXP"`
+		JWTSecretKey   string `env-required:"true" yaml:"secret"   env:"JWT_SECRET_KEY"`
 		Audience       string `env-required:"true" yaml:"audience" env:"JWT_AUDIENCE"`
 	}
 )
 
+var cfg *Config
+
 // NewConfig returns app config.
 func NewConfig() (*Config, error) {
-	cfg := &Config{}
-
-	err := cleanenv.ReadConfig("./config/config.yml", cfg)
-	if err != nil {
-		return nil, fmt.Errorf("config error: %w", err)
+	if cfg != nil {
+		return cfg, nil
 	}
 
-	err = cleanenv.ReadEnv(cfg)
+	cfg = &Config{}
+
+	err := cleanenv.ReadConfig("./config/config.yml", cfg)
 	if err != nil {
 		return nil, err
 	}
 
-	return cfg, nil
+	err = cleanenv.ReadEnv(cfg)
+
+	return cfg, err
 }

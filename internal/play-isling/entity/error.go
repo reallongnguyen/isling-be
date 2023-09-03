@@ -7,4 +7,6 @@ var (
 	ErrMissingDeletePerm = errors.New("missing delete permission")
 	ErrMissingUpdatePerm = errors.New("missing update permission")
 	ErrRoomNotFound      = errors.New("room not found")
+
+	ErrPlayUserNotFound = errors.New("play user not found")
 )

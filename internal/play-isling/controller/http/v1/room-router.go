@@ -17,23 +17,14 @@ type RoomRouter struct {
 	roomUC usecase.RoomUsecase
 }
 
-func NewRoomRouter(e *echo.Group, log logger.Interface, roomUC usecase.RoomUsecase) *RoomRouter {
-	router := &RoomRouter{
+func NewRoomRouter(log logger.Interface, roomUC usecase.RoomUsecase) *RoomRouter {
+	return &RoomRouter{
 		log:    log,
 		roomUC: roomUC,
 	}
-
-	g := e.Group("/rooms")
-	g.POST("", router.createRoom, common_mw.VerifyJWT())
-	g.GET("", router.listRoom, common_mw.VerifyJWT())
-	g.GET("/:slugName", router.getRoom, common_mw.ParseJWT())
-	g.PATCH("/:id", router.updateRoom, common_mw.VerifyJWT())
-	g.DELETE("/:id", router.deleteRoom, common_mw.VerifyJWT())
-
-	return router
 }
 
-func (router *RoomRouter) createRoom(c echo.Context) error {
+func (router *RoomRouter) Create(c echo.Context) error {
 	accountID, err := common_mw.GetAccountIDFromJWT(c)
 	if err != nil {
 		return common_http.ResponseCustomError(c, http.StatusBadRequest, err.Error(), []error{err})
@@ -57,7 +48,7 @@ func (router *RoomRouter) createRoom(c echo.Context) error {
 	return common_http.ResponseSuccess(c, room)
 }
 
-func (router *RoomRouter) listRoom(c echo.Context) error {
+func (router *RoomRouter) List(c echo.Context) error {
 	accountID, err := common_mw.GetAccountIDFromJWT(c)
 	if err != nil {
 		return common_http.ResponseCustomError(c, http.StatusBadRequest, err.Error(), []error{err})
@@ -71,7 +62,7 @@ func (router *RoomRouter) listRoom(c echo.Context) error {
 	return common_http.ResponseSuccess(c, roomCollection)
 }
 
-func (router *RoomRouter) getRoom(c echo.Context) error {
+func (router *RoomRouter) Show(c echo.Context) error {
 	accountID, _ := common_mw.GetAccountIDFromJWT(c)
 
 	slugName := c.Param("slugName")
@@ -84,7 +75,7 @@ func (router *RoomRouter) getRoom(c echo.Context) error {
 	return common_http.ResponseSuccess(c, room)
 }
 
-func (router *RoomRouter) updateRoom(c echo.Context) error {
+func (router *RoomRouter) Update(c echo.Context) error {
 	accountID, err := common_mw.GetAccountIDFromJWT(c)
 	if err != nil {
 		return common_http.ResponseCustomError(c, http.StatusBadRequest, err.Error(), []error{err})
@@ -116,7 +107,7 @@ func (router *RoomRouter) updateRoom(c echo.Context) error {
 	return common_http.ResponseSuccess(c, room)
 }
 
-func (router *RoomRouter) deleteRoom(c echo.Context) error {
+func (router *RoomRouter) Delete(c echo.Context) error {
 	accountID, err := common_mw.GetAccountIDFromJWT(c)
 	if err != nil {
 		return common_http.ResponseCustomError(c, http.StatusBadRequest, err.Error(), []error{err})

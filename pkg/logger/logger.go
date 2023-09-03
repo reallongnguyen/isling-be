@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"github.com/rs/zerolog"
+	zlog "github.com/rs/zerolog/log"
 )
 
 // Interface -.
@@ -44,7 +45,8 @@ func New(level string) *Logger {
 	zerolog.SetGlobalLevel(l)
 
 	skipFrameCount := 3
-	logger := zerolog.New(os.Stdout).With().Timestamp().CallerWithSkipFrameCount(zerolog.CallerSkipFrameCount + skipFrameCount).Logger()
+	logger := zlog.Output(zerolog.ConsoleWriter{Out: os.Stderr})
+	logger = logger.With().Timestamp().CallerWithSkipFrameCount(zerolog.CallerSkipFrameCount + skipFrameCount).Logger()
 
 	return &Logger{
 		logger: &logger,

@@ -3,25 +3,20 @@ package usecase
 import (
 	common_entity "isling-be/internal/common/entity"
 	"isling-be/internal/play-isling/entity"
+	"time"
 )
 
-type (
-	CreateRoomRequest struct {
-		Name        string
-		Description string
-		Cover       string
-	}
+type CreateRoomRequest struct {
+	Name        string
+	Description string
+	Cover       string
+}
 
-	FindRoomFilter struct {
-		OwnerID *common_entity.AccountID
-	}
-
-	UpdateRoomRequest struct {
-		Name        string
-		Description string
-		Cover       string
-	}
-)
+type UpdateRoomRequest struct {
+	Name        string
+	Description string
+	Cover       string
+}
 
 func UpdateRoomFromReq(room *entity.Room, req *UpdateRoomRequest) *entity.Room {
 	newRoom := *room
@@ -31,4 +26,16 @@ func UpdateRoomFromReq(room *entity.Room, req *UpdateRoomRequest) *entity.Room {
 	newRoom.Cover = req.Cover
 
 	return &newRoom
+}
+
+type HomePageResponse struct {
+	ForYou      *entity.RoomCollection   `json:"forYou,omitempty"`
+	Collections []*entity.RoomCollection `json:"collections"`
+}
+
+type CreateActionRequest struct {
+	AccountID common_entity.AccountID
+	Type      string
+	ObjectID  *string
+	Timestamp time.Time
 }

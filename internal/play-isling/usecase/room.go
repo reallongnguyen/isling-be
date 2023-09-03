@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
 	common_entity "isling-be/internal/common/entity"
 	"isling-be/internal/play-isling/entity"
 	"isling-be/pkg/logger"
@@ -15,6 +16,7 @@ type (
 	RoomUC struct {
 		log      logger.Interface
 		roomRepo RoomRepository
+		msgBus   *map[string]chan string
 	}
 )
 
@@ -26,10 +28,11 @@ const (
 
 var _ RoomUsecase = (*RoomUC)(nil)
 
-func NewRoomUsecase(log logger.Interface, roomRepo RoomRepository) *RoomUC {
+func NewRoomUsecase(log logger.Interface, roomRepo RoomRepository, msgBus *map[string]chan string) *RoomUC {
 	return &RoomUC{
 		log:      log,
 		roomRepo: roomRepo,
+		msgBus:   msgBus,
 	}
 }
 
@@ -61,6 +64,24 @@ func (uc *RoomUC) CreateRoom(c context.Context, accountID common_entity.AccountI
 		return nil, err
 	}
 
+	go func() {
+		if uc.msgBus == nil {
+			return
+		}
+
+		roomCreatedChan, ok := (*uc.msgBus)["roomCreated"]
+		if !ok {
+			return
+		}
+
+		roomJSON, err := json.Marshal(newRoom)
+		if err != nil {
+			return
+		}
+
+		roomCreatedChan <- string(roomJSON)
+	}()
+
 	return newRoom, nil
 }
 
@@ -69,7 +90,7 @@ func (uc *RoomUC) GetManyRoomOfUser(c context.Context, accountID common_entity.A
 		OwnerID: &accountID,
 	}
 
-	return uc.roomRepo.FindMany(c, &filter)
+	return uc.roomRepo.FindMany(c, &filter, &Order{Field: "name", Direction: "asc"})
 }
 
 func (uc *RoomUC) GetRoom(c context.Context, currentUserID common_entity.AccountID, slugName string) (*entity.Room, error) {
@@ -79,7 +100,7 @@ func (uc *RoomUC) GetRoom(c context.Context, currentUserID common_entity.Account
 	}
 
 	if room.OwnerID != currentUserID {
-		room.InviteCode = "******"
+		room.InviteCode = "********"
 	}
 
 	return room, nil
@@ -122,5 +143,28 @@ func (uc *RoomUC) DeleteRoom(c context.Context, currentUserID common_entity.Acco
 		return entity.ErrMissingDeletePerm
 	}
 
-	return uc.roomRepo.DeleteOne(c, id)
+	err = uc.roomRepo.DeleteOne(c, id)
+	if err != nil {
+		return err
+	}
+
+	go func() {
+		if uc.msgBus == nil {
+			return
+		}
+
+		roomDeletedChan, ok := (*uc.msgBus)["roomDeleted"]
+		if !ok {
+			return
+		}
+
+		roomJSON, err := json.Marshal(room)
+		if err != nil {
+			return
+		}
+
+		roomDeletedChan <- string(roomJSON)
+	}()
+
+	return nil
 }

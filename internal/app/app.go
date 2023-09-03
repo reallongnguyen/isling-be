@@ -7,11 +7,12 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/labstack/echo/v4"
 	"isling-be/config"
 	"isling-be/pkg/httpserver"
 	"isling-be/pkg/logger"
 	"isling-be/pkg/postgres"
+
+	"github.com/labstack/echo/v4"
 )
 
 // Run creates objects via constructors.
@@ -25,10 +26,21 @@ func Run(cfg *config.Config) {
 	}
 	defer pg.Close()
 
+	msgBus := make(map[string]chan string)
+
+	msgBus["accountCreated"] = make(chan string)
+	defer close(msgBus["accountCreated"])
+
+	msgBus["roomCreated"] = make(chan string)
+	defer close(msgBus["accountCreated"])
+
+	msgBus["roomDeleted"] = make(chan string)
+	defer close(msgBus["roomDeleted"])
+
 	// HTTP Server
 	handler := echo.New()
 	configHTTPServer(handler)
-	useModules(pg, l, handler)
+	useModules(pg, l, handler, &msgBus)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal

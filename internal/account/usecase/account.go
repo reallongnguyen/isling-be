@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"time"
@@ -14,16 +15,18 @@ import (
 )
 
 type AccountUC struct {
-	repo AccountRepository
-	log  logger.Interface
+	repo   AccountRepository
+	log    logger.Interface
+	msgBus *map[string]chan string
 }
 
 var _ AccountUsecase = (*AccountUC)(nil)
 
-func NewAccountUC(repo AccountRepository, log logger.Interface) AccountUsecase {
+func NewAccountUC(repo AccountRepository, log logger.Interface, msgBus *map[string]chan string) AccountUsecase {
 	return &AccountUC{
-		repo: repo,
-		log:  log,
+		repo:   repo,
+		log:    log,
+		msgBus: msgBus,
 	}
 }
 
@@ -57,6 +60,24 @@ func (uc *AccountUC) CreateAccount(ctx context.Context, createAccountReq request
 	if err != nil {
 		return nil, err
 	}
+
+	go func() {
+		if uc.msgBus == nil {
+			return
+		}
+
+		accountCreatedChan, ok := (*uc.msgBus)["accountCreated"]
+		if !ok {
+			return
+		}
+
+		accJSON, err := json.Marshal(account)
+		if err != nil {
+			return
+		}
+
+		accountCreatedChan <- string(accJSON)
+	}()
 
 	return account, nil
 }

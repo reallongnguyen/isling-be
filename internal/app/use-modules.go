@@ -10,8 +10,8 @@ import (
 	"github.com/labstack/echo/v4"
 )
 
-func useModules(pg *postgres.Postgres, l logger.Interface, handler *echo.Echo) {
-	account.Register(pg, l, handler)
-	playisling.Register(l, handler, pg)
+func useModules(pg *postgres.Postgres, l logger.Interface, handler *echo.Echo, msgBus *map[string]chan string) {
+	account.Register(pg, l, handler, msgBus)
+	playisling.Register(l, handler, pg, msgBus)
 	emailSender.Register(pg, l, handler)
 }
