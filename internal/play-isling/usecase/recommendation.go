@@ -12,6 +12,7 @@ import (
 )
 
 var feedbackTypes = []string{
+	"read",
 	"comment",
 	"like",
 	"share",

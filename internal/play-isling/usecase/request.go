@@ -29,7 +29,6 @@ func UpdateRoomFromReq(room *entity.Room, req *UpdateRoomRequest) *entity.Room {
 }
 
 type HomePageResponse struct {
-	ForYou      *entity.RoomCollection   `json:"forYou,omitempty"`
 	Collections []*entity.RoomCollection `json:"collections"`
 }
 
