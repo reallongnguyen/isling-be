@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"isling-be/config"
 	common_entity "isling-be/internal/common/entity"
 	"isling-be/internal/play-isling/entity"
 	"isling-be/pkg/logger"
@@ -21,12 +22,14 @@ type HomeUC struct {
 
 var _ HomeUsecase = (*HomeUC)(nil)
 
+var cfg, _ = config.NewConfig()
+
 func NewHomeUsecase(log logger.Interface, playUserRepo PlayUserRepository, roomRepo RoomRepository) HomeUsecase {
 	return &HomeUC{
 		log:          log,
 		playUserRepo: playUserRepo,
 		roomRepo:     roomRepo,
-		gorse:        client.NewGorseClient("http://localhost:8087", ""),
+		gorse:        client.NewGorseClient(cfg.GORSE.URL, ""),
 	}
 }
 
