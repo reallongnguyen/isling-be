@@ -6,9 +6,9 @@ services:
     volumes:
       - pg-data:/var/lib/postgresql/data
     environment:
-      POSTGRES_USER: 'user'
-      POSTGRES_PASSWORD: 'pass'
-      POSTGRES_DB: 'postgres'
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - 5432:5432
 
@@ -83,8 +83,9 @@ services:
     container_name: app
     image: app
     environment:
-      PG_URL: 'postgres://user:pass@postgres:5432/postgres'
+      PG_URL: 'postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/postgres'
       GORSE_URL: 'http://server:8087'
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
     ports:
       - 8080:8080
     depends_on:
