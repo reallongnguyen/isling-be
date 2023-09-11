@@ -19,4 +19,4 @@ jwt:
   exp: 3600
 
 gorse:
-  url: 'http://localhost:8087'
+  url: 'http://127.0.0.1:8087'

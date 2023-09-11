@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"fmt"
 	"isling-be/config"
 	account_entity "isling-be/internal/account/entity"
 	"isling-be/internal/play-isling/entity"
@@ -33,6 +34,7 @@ var _ RecommendationUsecase = (*RecommendationUC)(nil)
 var cfg, _ = config.NewConfig()
 
 func NewRecommendationUC() RecommendationUsecase {
+	fmt.Println("###", cfg.GORSE.URL)
 	return &RecommendationUC{
 		gorse: client.NewGorseClient(cfg.GORSE.URL, ""),
 	}
