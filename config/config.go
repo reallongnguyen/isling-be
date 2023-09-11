@@ -7,11 +7,12 @@ import (
 type (
 	// Config -.
 	Config struct {
-		App  `yaml:"app"`
-		HTTP `yaml:"http"`
-		Log  `yaml:"logger"`
-		PG   `yaml:"postgres"`
-		JWT  `yaml:"jwt"`
+		App   `yaml:"app"`
+		HTTP  `yaml:"http"`
+		Log   `yaml:"logger"`
+		PG    `yaml:"postgres"`
+		JWT   `yaml:"jwt"`
+		GORSE `yaml:"gorse"`
 	}
 
 	// App -.
@@ -40,6 +41,10 @@ type (
 		AccessTokenEXP int    `env-required:"true" yaml:"exp"      env:"JWT_EXP"`
 		JWTSecretKey   string `env-required:"true" yaml:"secret"   env:"JWT_SECRET_KEY"`
 		Audience       string `env-required:"true" yaml:"audience" env:"JWT_AUDIENCE"`
+	}
+
+	GORSE struct {
+		URL string `env-required:"true" yaml:"url" env:"GORSE_URL"`
 	}
 )
 

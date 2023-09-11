@@ -2,6 +2,7 @@ package usecase
 
 import (
 	"context"
+	"isling-be/config"
 	account_entity "isling-be/internal/account/entity"
 	"isling-be/internal/play-isling/entity"
 	"strconv"
@@ -29,9 +30,11 @@ type RecommendationUC struct {
 
 var _ RecommendationUsecase = (*RecommendationUC)(nil)
 
+var cfg, _ = config.NewConfig()
+
 func NewRecommendationUC() RecommendationUsecase {
 	return &RecommendationUC{
-		gorse: client.NewGorseClient("http://localhost:8087", ""),
+		gorse: client.NewGorseClient(cfg.GORSE.URL, ""),
 	}
 }
 

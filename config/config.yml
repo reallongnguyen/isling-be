@@ -17,3 +17,6 @@ jwt:
   secret: 'secret'
   audience: 'isling.me'
   exp: 3600
+
+gorse:
+  url: 'http://localhost:8087'
