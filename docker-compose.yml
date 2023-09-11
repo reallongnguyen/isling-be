@@ -83,8 +83,8 @@ services:
     container_name: app
     image: app
     environment:
-      PG_URL: 'postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/postgres'
-      GORSE_URL: 'http://server:8087'
+      PG_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/postgres
+      GORSE_URL: http://server:8087
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
     ports:
       - 8080:8080
