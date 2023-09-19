@@ -35,7 +35,7 @@ run:
 .PHONY: run
 
 docker-rm-volume: ### remove docker volume
-	docker volume rm isling-be_pg-data
+	docker volume rm isling-be_pg-data isling-be_worker_data isling-be_server_data isling-be_master_data isling-be_gorse_log
 .PHONY: docker-rm-volume
 
 linter-golangci: ### check by golangci linter
