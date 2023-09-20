@@ -210,7 +210,7 @@ refresh_recommend_period = "24h"
 enable_latest_recommend = true
 
 # Enable popular recommendation during offline recommendation. The default value is false.
-enable_popular_recommend = true
+enable_popular_recommend = false
 
 # Enable user-based similarity recommendation during offline recommendation. The default value is false.
 enable_user_based_recommend = true
