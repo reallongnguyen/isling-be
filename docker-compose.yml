@@ -42,6 +42,8 @@ services:
     restart: unless-stopped
     ports:
       - 8087:8087
+    environment:
+      GORSE_API_KEY: ${GORSE_API_KEY}
     command: >
       --master-host master --master-port 8086
       --http-host 0.0.0.0 --http-port 8087
@@ -62,6 +64,9 @@ services:
     environment:
       GORSE_CACHE_STORE: redis://default:${REDIS_PASSWORD}@redis:6379
       GORSE_DATA_STORE: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/gorse?sslmode=disable
+      GORSE_DASHBOARD_USER_NAME: ${GORSE_DASHBOARD_USER_NAME}
+      GORSE_DASHBOARD_PASSWORD: ${GORSE_DASHBOARD_PASSWORD}
+      GORSE_ADMIN_API_KEY: ${GORSE_ADMIN_API_KEY}
     command: >
       -c /etc/gorse/config.toml
       --log-path /var/log/gorse/master.log
@@ -81,6 +86,7 @@ services:
     environment:
       PG_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
       GORSE_URL: http://server:8087
+      GORSE_API_KEY: ${GORSE_API_KEY}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
     ports:
       - 8080:8080

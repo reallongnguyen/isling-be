@@ -26,7 +26,7 @@ func NewHomeUsecase(log logger.Interface, playUserRepo PlayUserRepository, roomR
 		log:          log,
 		playUserRepo: playUserRepo,
 		roomRepo:     roomRepo,
-		gorse:        client.NewGorseClient(cfg.GORSE.URL, ""),
+		gorse:        client.NewGorseClient(cfg.GORSE.URL, cfg.GORSE.APIKey),
 	}
 }
 

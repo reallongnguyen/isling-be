@@ -34,7 +34,7 @@ var cfg, _ = config.NewConfig()
 
 func NewRecommendationUC() RecommendationUsecase {
 	return &RecommendationUC{
-		gorse: client.NewGorseClient(cfg.GORSE.URL, ""),
+		gorse: client.NewGorseClient(cfg.GORSE.URL, cfg.GORSE.APIKey),
 	}
 }
 
