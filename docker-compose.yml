@@ -85,7 +85,7 @@ services:
     environment:
       PG_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
       GORSE_URL: http://server:8087
-      GORSE_API_KEY: ${GORSE_API_KEY}
+      GORSE_SERVER_API_KEY: ${GORSE_SERVER_API_KEY}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
     ports:
       - 8080:8080
