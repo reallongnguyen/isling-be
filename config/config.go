@@ -45,7 +45,7 @@ type (
 
 	GORSE struct {
 		URL    string `env-required:"true" yaml:"url" env:"GORSE_URL"`
-		APIKey string `env:"GORSE_API_KEY"`
+		APIKey string `env:"GORSE_SERVER_API_KEY"`
 	}
 )
 

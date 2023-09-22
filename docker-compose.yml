@@ -42,8 +42,6 @@ services:
     restart: unless-stopped
     ports:
       - 8087:8087
-    environment:
-      GORSE_API_KEY: ${GORSE_API_KEY}
     command: >
       --master-host master --master-port 8086
       --http-host 0.0.0.0 --http-port 8087
@@ -67,6 +65,7 @@ services:
       GORSE_DASHBOARD_USER_NAME: ${GORSE_DASHBOARD_USER_NAME}
       GORSE_DASHBOARD_PASSWORD: ${GORSE_DASHBOARD_PASSWORD}
       GORSE_ADMIN_API_KEY: ${GORSE_ADMIN_API_KEY}
+      GORSE_SERVER_API_KEY: ${GORSE_SERVER_API_KEY}
     command: >
       -c /etc/gorse/config.toml
       --log-path /var/log/gorse/master.log
