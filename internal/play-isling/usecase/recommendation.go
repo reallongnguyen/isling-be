@@ -51,11 +51,8 @@ func (uc *RecommendationUC) InsertUser(c context.Context, account *account_entit
 
 func (uc *RecommendationUC) InsertRoom(c context.Context, room *entity.Room) error {
 	_, err := uc.gorse.InsertItem(c, client.Item{
-		Comment: "insert room " + room.Name,
-		Labels: []string{
-			room.Name,
-			room.Description,
-		},
+		Comment:    "insert room " + room.Name,
+		Labels:     []string{},
 		Categories: []string{"room"},
 		ItemId:     strconv.FormatInt(room.ID, 10),
 		IsHidden:   room.Visibility != entity.VisibilityPublic,
@@ -87,7 +84,7 @@ func (uc *RecommendationUC) InsertFeedback(c context.Context, actions []CreateAc
 			FeedbackType: action.Type,
 			UserId:       strconv.FormatInt(int64(action.AccountID), 10),
 			ItemId:       *action.ObjectID,
-			Timestamp:    action.Timestamp.Format("2006-01-02T15:04:05Z07:00"),
+			Timestamp:    action.Timestamp.Format(time.RFC3339),
 		}
 
 		feedbacks = append(feedbacks, feedback)
