@@ -12,6 +12,15 @@ services:
     ports:
       - 5432:5432
 
+  surrealdb:
+    user: root
+    image: surrealdb/surrealdb:latest
+    command: start --log debug --auth --user ${SURREAL_USER} --pass ${SURREAL_PASSWORD} file:/data/surreal.db
+    volumes:
+      - surreal_data:/mydata
+    ports:
+      - 8000:8000
+
   redis:
     container_name: redis-isling
     image: redis/redis-stack
@@ -108,3 +117,4 @@ volumes:
   server_data:
   master_data:
   gorse_log:
+  surreal_data:
