@@ -1,0 +1,19 @@
+DEFINE EVENT room_owner_change ON TABLE media_rooms 
+WHEN $event = 'CREATE' OR ($event = 'UPDATE' AND ($before.ownerID != $after.ownerID)) 
+THEN {
+    LET $from = (SELECT * FROM users WHERE id = $after.ownerID);
+    LET $to = $after;
+
+    IF $before != NONE THEN (
+        DELETE own WHERE in = $before.ownerID AND out = $before.id
+    ) ELSE
+      []
+    END;
+
+    IF $from != NONE THEN (
+        RELATE $from->own->$to 
+        SET assetType = "mediaRoom"
+    ) ELSE
+      []
+    END;
+};

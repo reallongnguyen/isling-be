@@ -1,6 +1,6 @@
 app:
   name: 'isling-be'
-  version: '0.1.0'
+  version: '0.2.0'
 
 http:
   port: '8080'
@@ -20,3 +20,8 @@ jwt:
 
 gorse:
   url: 'http://127.0.0.1:8087'
+
+surreal:
+  url: 'ws://localhost:8000/rpc'
+  ns: 'iplay'
+  db: 'iplay'

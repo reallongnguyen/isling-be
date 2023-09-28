@@ -96,11 +96,17 @@ services:
       GORSE_URL: http://server:8087
       GORSE_SERVER_API_KEY: ${GORSE_SERVER_API_KEY}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      SURREAL_URL: ws://surrealdb:8000/rpc
+      SURREAL_NS: ${SURREAL_NS}
+      SURREAL_DB: ${SURREAL_DB}
+      SURREAL_USER: ${SURREAL_USER}
+      SURREAL_PASS: ${SURREAL_PASSWORD}
     ports:
       - 8080:8080
     depends_on:
       - postgres
       - server
+      - surrealdb
 
   # integration:
   #   build:

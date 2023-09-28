@@ -11,6 +11,7 @@ import (
 	"isling-be/pkg/httpserver"
 	"isling-be/pkg/logger"
 	"isling-be/pkg/postgres"
+	"isling-be/pkg/surreal"
 
 	"github.com/labstack/echo/v4"
 )
@@ -26,6 +27,18 @@ func Run(cfg *config.Config) {
 	}
 	defer pg.Close()
 
+	sur, err := surreal.New(
+		cfg.Surreal.URL,
+		cfg.Surreal.NS,
+		cfg.Surreal.DB,
+		cfg.Surreal.User,
+		cfg.Surreal.Password,
+	)
+	if err != nil {
+		l.Fatal(fmt.Errorf("app - Run - surreal.New: %w", err))
+	}
+	defer sur.Close()
+
 	msgBus := make(map[string]chan string)
 
 	msgBus["accountCreated"] = make(chan string)
@@ -40,7 +53,7 @@ func Run(cfg *config.Config) {
 	// HTTP Server
 	handler := echo.New()
 	configHTTPServer(handler)
-	useModules(pg, l, handler, &msgBus)
+	useModules(pg, sur, l, handler, &msgBus)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal

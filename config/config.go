@@ -7,12 +7,13 @@ import (
 type (
 	// Config -.
 	Config struct {
-		App   `yaml:"app"`
-		HTTP  `yaml:"http"`
-		Log   `yaml:"logger"`
-		PG    `yaml:"postgres"`
-		JWT   `yaml:"jwt"`
-		GORSE `yaml:"gorse"`
+		App     `yaml:"app"`
+		HTTP    `yaml:"http"`
+		Log     `yaml:"logger"`
+		PG      `yaml:"postgres"`
+		JWT     `yaml:"jwt"`
+		GORSE   `yaml:"gorse"`
+		Surreal `yaml:"surreal"`
 	}
 
 	// App -.
@@ -35,6 +36,14 @@ type (
 	PG struct {
 		PoolMax int    `env-required:"true" yaml:"pool_max" env:"PG_POOL_MAX"`
 		URL     string `env-required:"true" yaml:"url"      env:"PG_URL"`
+	}
+
+	Surreal struct {
+		URL      string `env-required:"true" yaml:"url"     env:"SURREAL_URL"`
+		NS       string `env-required:"true" yaml:"ns"      env:"SURREAL_NS"`
+		DB       string `env-required:"true" yaml:"db"      env:"SURREAL_DB"`
+		User     string `env-required:"true" env:"SURREAL_USER"`
+		Password string `env-required:"true" env:"SURREAL_PASS"`
 	}
 
 	JWT struct {
