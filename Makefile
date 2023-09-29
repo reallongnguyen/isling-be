@@ -67,15 +67,15 @@ mock: ### run mockery
 .PHONY: mock
 
 migrate-create:  ### create new migration
-	migrate create -ext sql -dir migrations '$(name)'
+	migrate create -ext sql -dir database/postgres/migrations '$(name)'
 .PHONY: migrate-create
 
 migrate-up: ### migration up
-	migrate -path migrations -database '$(PG_URL)?sslmode=disable' up
+	migrate -path database/postgres/migrations -database '$(PG_URL)?sslmode=disable' up
 .PHONY: migrate-up
 
 migrate-down: ### migration down
-	migrate -path migrations -database '$(PG_URL)?sslmode=disable' down
+	migrate -path database/postgres/migrations -database '$(PG_URL)?sslmode=disable' down
 .PHONY: migrate-down
 
 psql: ### access database by psql

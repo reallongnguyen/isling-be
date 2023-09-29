@@ -9,6 +9,7 @@ require (
 	github.com/go-playground/validator/v10 v10.14.0
 	github.com/golang-jwt/jwt/v5 v5.0.0
 	github.com/golang-migrate/migrate/v4 v4.16.0
+	github.com/gookit/color v1.4.2
 	github.com/gosimple/slug v1.13.1
 	github.com/ilyakaznacheev/cleanenv v1.4.2
 	github.com/jackc/pgtype v1.14.0
@@ -18,6 +19,7 @@ require (
 	github.com/matoous/go-nanoid/v2 v2.0.0
 	github.com/prometheus/client_golang v1.15.1
 	github.com/rs/zerolog v1.30.0
+	github.com/surrealdb/surrealdb.go v0.2.1
 	github.com/swaggo/echo-swagger v1.4.0
 	github.com/swaggo/swag v1.16.1
 	github.com/zhenghaoz/gorse v0.5.0-alpha.0.20230905121337-24d69b1426a0
@@ -47,7 +49,6 @@ require (
 	github.com/golang-jwt/jwt v3.2.2+incompatible // indirect
 	github.com/golang/protobuf v1.5.3 // indirect
 	github.com/google/go-cmp v0.5.9 // indirect
-	github.com/gookit/color v1.4.2 // indirect
 	github.com/gorilla/websocket v1.5.0 // indirect
 	github.com/gosimple/unidecode v1.0.1 // indirect
 	github.com/hashicorp/errwrap v1.1.0 // indirect
@@ -78,7 +79,6 @@ require (
 	github.com/prometheus/client_model v0.3.0 // indirect
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
-	github.com/surrealdb/surrealdb.go v0.2.1 // indirect
 	github.com/swaggo/files/v2 v2.0.0 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/valyala/bytebufferpool v1.0.0 // indirect

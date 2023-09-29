@@ -1,0 +1,6 @@
+docker-compose.yml
+/database
+.air.toml
+.env.example
+.golangci.yml
+README.md
