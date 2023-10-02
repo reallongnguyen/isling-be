@@ -57,7 +57,7 @@ func (r *RoomAudience) Start() error {
 			if err != nil {
 				r.log.Error("RoomAudience: calculate audience: %w", err)
 
-				return
+				continue
 			}
 
 			res, err := surrealdb.SmartUnmarshal[[]struct {
@@ -67,11 +67,11 @@ func (r *RoomAudience) Start() error {
 			if err != nil {
 				r.log.Error("RoomAudience: calculate audience: %w", err)
 
-				return
+				continue
 			}
 
 			if len(res) == 0 {
-				return
+				continue
 			}
 
 			roomIDList := make([]string, len(res))
