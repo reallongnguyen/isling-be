@@ -49,6 +49,7 @@ func (r *SyncDataUsecase) Handle(payload *Payload) error {
 			LastName:    profile.LastName,
 			Gender:      profile.Gender,
 			DateOfBirth: profile.DateOfBirth,
+			AvatarURL:   profile.AvatarURL,
 		}
 
 		_, err := r.sr.Update(user.ID, user)

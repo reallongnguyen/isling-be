@@ -1,0 +1,1 @@
+ALTER TABLE profiles ADD avatar_url VARCHAR(256) DEFAULT CONCAT('https://api.dicebear.com/7.x/avataaars/svg?backgroundType=gradientLinear,solid&backgroundColor=b6e3f4,ffd5dc,ffdfbf,d1d4f9&skinColor=d08b5b,edb98a,ffdbb4&seed=', gen_random_uuid());

@@ -21,6 +21,7 @@ type Profile struct {
 	LastName    *string          `json:"lastName,omitempty"`
 	Gender      *GenderIdentity  `json:"gender,omitempty"`
 	DateOfBirth *time.Time       `json:"dateOfBirth,omitempty"`
+	AvatarURL   *string          `json:"avatarUrl"`
 	CreatedAt   *time.Time       `json:"createdAt,omitempty"`
 	UpdatedAt   *time.Time       `json:"updatedAt,omitempty"`
 }

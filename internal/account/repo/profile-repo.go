@@ -33,6 +33,7 @@ func (repo *ProfileRepo) FindOneProfileByID(ctx context.Context, accountID commo
 			last_name,
 			gender,
 			date_of_birth,
+			avatar_url,
 			p.created_at AS created_at,
 			p.updated_at AS updated_at
 		FROM accounts AS a
@@ -74,6 +75,7 @@ func rowToProfile(row pgx.Row) (*entity.Profile, error) {
 		&profile.LastName,
 		&profile.Gender,
 		&profile.DateOfBirth,
+		&profile.AvatarURL,
 		&profile.CreatedAt,
 		&profile.UpdatedAt,
 	)

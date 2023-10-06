@@ -12,9 +12,17 @@ const (
 	VisibilityMember VisibilityType = "member"
 )
 
+type RoomOwner struct {
+	ID        common_entity.AccountID `json:"id"`
+	FirstName *string                 `json:"firstName,omitempty"`
+	LastName  *string                 `json:"lastName,omitempty"`
+	AvatarURL *string                 `json:"avatarUrl,omitempty"`
+}
+
 type Room struct {
 	ID            int64                     `json:"id"`
-	OwnerID       common_entity.AccountID   `json:"ownerId"`
+	OwnerID       common_entity.AccountID   `json:"ownerId,omitempty"`
+	Owner         *RoomOwner                `json:"owner,omitempty"`
 	Visibility    VisibilityType            `json:"visibility"`
 	InviteCode    string                    `json:"inviteCode"`
 	Name          string                    `json:"name"`
@@ -31,6 +39,7 @@ func (room *Room) ToRoomPublic() *RoomPublic {
 	return &RoomPublic{
 		ID:            room.ID,
 		OwnerID:       room.OwnerID,
+		Owner:         room.Owner,
 		Visibility:    room.Visibility,
 		Name:          room.Name,
 		Slug:          room.Slug,
@@ -46,6 +55,7 @@ func (room *Room) ToRoomPublic() *RoomPublic {
 type RoomPublic struct {
 	ID            int64                     `json:"id"`
 	OwnerID       common_entity.AccountID   `json:"ownerId"`
+	Owner         *RoomOwner                `json:"owner,omitempty"`
 	Visibility    VisibilityType            `json:"visibility"`
 	Name          string                    `json:"name"`
 	Slug          string                    `json:"slug"`

@@ -69,7 +69,7 @@ func (repo *RoomRepo) FindMany(c context.Context, filter *usecase.FindRoomFilter
 
 		if filter.IDIn != nil {
 			binds = append(binds, filter.IDIn)
-			whereConditions = append(whereConditions, "id = ANY($"+strconv.Itoa(len(binds))+")")
+			whereConditions = append(whereConditions, "mr.id = ANY($"+strconv.Itoa(len(binds))+")")
 		}
 	}
 
@@ -79,16 +79,20 @@ func (repo *RoomRepo) FindMany(c context.Context, filter *usecase.FindRoomFilter
 
 	whereClause := strings.Join(whereConditions, " AND ")
 
-	orderClause := "id DESC"
+	orderClause := "mr.id DESC"
 
 	if order != nil {
-		orderClause = order.Field + " " + order.Direction + ", id DESC"
+		orderClause = order.Field + " " + order.Direction + ", mr.id DESC"
 	}
 
 	sql := `
 		SELECT
-			id,
+			mr.id,
 			owner_id,
+			p.account_id AS owner_id,
+			p.first_name AS owner_first_name,
+			p.last_name AS owner_last_name,
+			p.avatar_url AS owner_avatar_url,
 			visibility,
 			invite_code,
 			name,
@@ -97,16 +101,18 @@ func (repo *RoomRepo) FindMany(c context.Context, filter *usecase.FindRoomFilter
 			cover,
 			audience_count,
 			audiences,
-			created_at,
-			updated_at
-		FROM media_rooms
+			mr.created_at,
+			mr.updated_at
+		FROM media_rooms mr
+			LEFT JOIN profiles p ON (mr.owner_id = p.account_id)
 		WHERE ` + whereClause + `
 		ORDER BY ` + orderClause + `
 	`
 
 	rooms := make([]*entity.Room, 0, initialSliceCap)
 
-	room := entity.Room{}
+	roomOwner := new(entity.RoomOwner)
+	room := entity.Room{Owner: roomOwner}
 
 	_, err := repo.Pool.QueryFunc(
 		c,
@@ -115,6 +121,10 @@ func (repo *RoomRepo) FindMany(c context.Context, filter *usecase.FindRoomFilter
 		[]interface{}{
 			&room.ID,
 			&room.OwnerID,
+			&room.Owner.ID,
+			&room.Owner.FirstName,
+			&room.Owner.LastName,
+			&room.Owner.AvatarURL,
 			&room.Visibility,
 			&room.InviteCode,
 			&room.Name,
@@ -129,6 +139,10 @@ func (repo *RoomRepo) FindMany(c context.Context, filter *usecase.FindRoomFilter
 		func(pgx.QueryFuncRow) error {
 			newRoom := room
 			newRoom.Audiences = append(newRoom.Audiences, room.Audiences...)
+
+			if newRoom.Owner.ID == 0 {
+				newRoom.Owner = nil
+			}
 
 			rooms = append(rooms, &newRoom)
 
@@ -147,8 +161,12 @@ func (repo *RoomRepo) FindMany(c context.Context, filter *usecase.FindRoomFilter
 func (repo *RoomRepo) FindOne(c context.Context, id int64) (*entity.Room, error) {
 	sql := `
 		SELECT
-			id,
+			mr.id,
 			owner_id,
+			p.account_id AS owner_id,
+			p.first_name AS owner_first_name,
+			p.last_name AS owner_last_name,
+			p.avatar_url AS owner_avatar_url,
 			visibility,
 			invite_code,
 			name,
@@ -157,9 +175,10 @@ func (repo *RoomRepo) FindOne(c context.Context, id int64) (*entity.Room, error)
 			cover,
 			audience_count,
 			audiences,
-			created_at,
-			updated_at
-		FROM media_rooms
+			mr.created_at,
+			mr.updated_at
+		FROM media_rooms mr
+			LEFT JOIN profiles p ON (mr.owner_id = p.account_id)
 		WHERE id = $1
 	`
 
@@ -171,8 +190,12 @@ func (repo *RoomRepo) FindOne(c context.Context, id int64) (*entity.Room, error)
 func (repo *RoomRepo) FindOneBySlug(c context.Context, slug string) (*entity.Room, error) {
 	sql := `
 		SELECT
-			id,
+			mr.id,
 			owner_id,
+			p.account_id AS owner_id,
+			p.first_name AS owner_first_name,
+			p.last_name AS owner_last_name,
+			p.avatar_url AS owner_avatar_url,
 			visibility,
 			invite_code,
 			name,
@@ -181,9 +204,10 @@ func (repo *RoomRepo) FindOneBySlug(c context.Context, slug string) (*entity.Roo
 			cover,
 			audience_count,
 			audiences,
-			created_at,
-			updated_at
-		FROM media_rooms
+			mr.created_at,
+			mr.updated_at
+		FROM media_rooms mr
+			LEFT JOIN profiles p ON (mr.owner_id = p.account_id)
 		WHERE slug = $1
 	`
 
@@ -247,11 +271,16 @@ func (repo *RoomRepo) DeleteOne(c context.Context, id int64) error {
 }
 
 func rowToRoom(row pgx.Row) (*entity.Room, error) {
-	room := entity.Room{}
+	roomOwner := new(entity.RoomOwner)
+	room := entity.Room{Owner: roomOwner}
 
 	err := row.Scan(
 		&room.ID,
 		&room.OwnerID,
+		&room.Owner.ID,
+		&room.Owner.FirstName,
+		&room.Owner.LastName,
+		&room.Owner.AvatarURL,
 		&room.Visibility,
 		&room.InviteCode,
 		&room.Name,
@@ -266,6 +295,10 @@ func rowToRoom(row pgx.Row) (*entity.Room, error) {
 
 	if errors.Is(err, pgx.ErrNoRows) {
 		return nil, entity.ErrRoomNotFound
+	}
+
+	if room.Owner.ID == 0 {
+		room.Owner = nil
 	}
 
 	return &room, nil

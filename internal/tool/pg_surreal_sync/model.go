@@ -15,6 +15,7 @@ type Profile struct {
 	LastName    *string   `json:"last_name,omitempty"`
 	Gender      *string   `json:"gender,omitempty"`
 	DateOfBirth *string   `json:"date_of_birth,omitempty"`
+	AvatarURL   *string   `json:"avatar_url,omitempty"`
 	CreatedAt   time.Time `json:"created_at"`
 	UpdatedAt   time.Time `json:"updated_at"`
 }
@@ -40,6 +41,7 @@ type SRUser struct {
 	LastName    *string `json:"lastName,omitempty"`
 	Gender      *string `json:"gender,omitempty"`
 	DateOfBirth *string `json:"dateOfBirth,omitempty"`
+	AvatarURL   *string `json:"avatarUrl,omitempty"`
 }
 
 type SRRoom struct {

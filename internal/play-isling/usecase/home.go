@@ -37,7 +37,7 @@ func (uc *HomeUC) Show(c context.Context, accountID common_entity.AccountID) (*H
 	if len(recentlyPublicRooms) > 3 {
 		collections = append(collections, &entity.RoomCollection{
 			ID:    "watch-again",
-			Name:  "Watch again",
+			Name:  "Watch It Again",
 			Rooms: recentlyPublicRooms,
 		})
 	}
@@ -95,7 +95,7 @@ func (uc *HomeUC) Show(c context.Context, accountID common_entity.AccountID) (*H
 	if len(recentlyPublicRooms) > 0 && len(recentlyPublicRooms) <= 3 {
 		collections = append(collections, &entity.RoomCollection{
 			ID:    "watch-again",
-			Name:  "Watch again",
+			Name:  "Watch It Again",
 			Rooms: recentlyPublicRooms,
 		})
 	}
