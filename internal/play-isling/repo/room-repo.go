@@ -139,6 +139,8 @@ func (repo *RoomRepo) FindMany(c context.Context, filter *usecase.FindRoomFilter
 		func(pgx.QueryFuncRow) error {
 			newRoom := room
 			newRoom.Audiences = append(newRoom.Audiences, room.Audiences...)
+			newRoom.Owner = new(entity.RoomOwner)
+			*newRoom.Owner = *room.Owner
 
 			if newRoom.Owner.ID == 0 {
 				newRoom.Owner = nil
