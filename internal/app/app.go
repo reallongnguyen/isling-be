@@ -8,11 +8,13 @@ import (
 	"syscall"
 
 	"isling-be/config"
+	"isling-be/pkg/facade"
 	"isling-be/pkg/httpserver"
 	"isling-be/pkg/logger"
 	"isling-be/pkg/postgres"
 	"isling-be/pkg/surreal"
 
+	"github.com/dgraph-io/ristretto"
 	"github.com/labstack/echo/v4"
 )
 
@@ -21,7 +23,7 @@ func Run(cfg *config.Config) {
 	l := logger.New(cfg.Log.Level)
 
 	// Repository
-	pg, err := postgres.New(cfg.PG.URL, postgres.MaxPoolSize(cfg.PG.PoolMax))
+	pg, err := postgres.New(cfg.PG.URL, l, postgres.MaxPoolSize(cfg.PG.PoolMax))
 	if err != nil {
 		l.Fatal(fmt.Errorf("app - Run - postgres.New: %w", err))
 	}
@@ -39,6 +41,17 @@ func Run(cfg *config.Config) {
 	}
 	defer sur.Close()
 
+	// Cache
+	cache, err := ristretto.NewCache(&ristretto.Config{
+		NumCounters: 1e7,
+		MaxCost:     1e8,
+		BufferItems: 64,
+	})
+	if err != nil {
+		l.Fatal("app - Run - cache.New: %w", err)
+	}
+
+	// Msg bus
 	msgBus := make(map[string]chan string)
 
 	msgBus["accountCreated"] = make(chan string)
@@ -50,10 +63,16 @@ func Run(cfg *config.Config) {
 	msgBus["roomDeleted"] = make(chan string)
 	defer close(msgBus["roomDeleted"])
 
+	msgBus["userActivityOnItem"] = make(chan string)
+	defer close(msgBus["userActivityOnItem"])
+
+	// Setup facade
+	facade.Setup(l, cfg, cache)
+
 	// HTTP Server
 	handler := echo.New()
-	configHTTPServer(handler)
-	useModules(pg, sur, l, handler, &msgBus)
+	configHTTPServer(cfg, handler)
+	stopModules := useModules(l, cache, cfg, handler, pg, sur, &msgBus)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal
@@ -70,6 +89,8 @@ func Run(cfg *config.Config) {
 	}
 
 	// Shutdown
+	stopModules()
+
 	err = httpServer.Shutdown()
 	if err != nil {
 		l.Error(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err))

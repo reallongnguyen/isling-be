@@ -15,4 +15,5 @@ var (
 	ErrRefreshTokenNotFound  = errors.New("refresh token not found")
 	ErrRefreshTokenInvalid   = errors.New("refresh token invalid")
 	ErrPasswordNotCorrect    = errors.New("password not correct")
+	ErrCanNotParseReqBody    = errors.New("can not parse request's body")
 )

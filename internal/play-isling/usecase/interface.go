@@ -5,6 +5,8 @@ import (
 	account_entity "isling-be/internal/account/entity"
 	common_entity "isling-be/internal/common/entity"
 	"isling-be/internal/play-isling/entity"
+
+	"github.com/zhenghaoz/gorse/client"
 )
 
 type (
@@ -54,6 +56,6 @@ type (
 		InsertUser(c context.Context, account *account_entity.Account) error
 		InsertRoom(c context.Context, room *entity.Room) error
 		HideItem(c context.Context, itemID string) error
-		InsertFeedback(c context.Context, actions []CreateActionRequest) error
+		InsertFeedback(c context.Context, feedback client.Feedback) error
 	}
 )

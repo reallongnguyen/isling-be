@@ -9,18 +9,17 @@ import (
 	"isling-be/internal/account/usecase"
 	common_mw "isling-be/internal/common/controller/http/middleware"
 	common_entity "isling-be/internal/common/entity"
-	"isling-be/pkg/logger"
+	"isling-be/pkg/facade"
 
 	"github.com/labstack/echo/v4"
 )
 
 type AccountsRouter struct {
 	accountUC usecase.AccountUsecase
-	log       logger.Interface
 }
 
-func NewAccountsRouter(e *echo.Group, accountUC usecase.AccountUsecase, log logger.Interface) *AccountsRouter {
-	router := AccountsRouter{accountUC: accountUC, log: log}
+func NewAccountsRouter(e *echo.Group, accountUC usecase.AccountUsecase) *AccountsRouter {
+	router := AccountsRouter{accountUC: accountUC}
 	group := e.Group("/accounts", common_mw.VerifyJWT())
 	group.POST("", router.create)
 	group.GET("/:accountID", router.getOne)
@@ -65,7 +64,7 @@ func (router *AccountsRouter) getOne(c echo.Context) error {
 	account, err := router.accountUC.GetAccountByID(c.Request().Context(), common_entity.AccountID(accountID))
 
 	if errors.Is(err, common_entity.ErrAccountNotFound) {
-		router.log.Info("get one: account id %d not found", accountID)
+		facade.Log().Info("get one: account id %d not found", accountID)
 
 		return common_entity.ResponseError(c, http.StatusNotFound, "not found", []error{err})
 	}

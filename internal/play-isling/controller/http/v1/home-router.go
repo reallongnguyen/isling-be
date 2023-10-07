@@ -4,20 +4,17 @@ import (
 	common_http "isling-be/internal/common/controller/http"
 	common_mw "isling-be/internal/common/controller/http/middleware"
 	"isling-be/internal/play-isling/usecase"
-	"isling-be/pkg/logger"
 	"net/http"
 
 	"github.com/labstack/echo/v4"
 )
 
 type HomeRouter struct {
-	log    logger.Interface
 	homeUC usecase.HomeUsecase
 }
 
-func NewHomeRouter(log logger.Interface, homeUC usecase.HomeUsecase) *HomeRouter {
+func NewHomeRouter(homeUC usecase.HomeUsecase) *HomeRouter {
 	return &HomeRouter{
-		log:    log,
 		homeUC: homeUC,
 	}
 }

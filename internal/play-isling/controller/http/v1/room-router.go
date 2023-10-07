@@ -5,7 +5,6 @@ import (
 	common_mw "isling-be/internal/common/controller/http/middleware"
 	"isling-be/internal/play-isling/controller/http/v1/dto"
 	"isling-be/internal/play-isling/usecase"
-	"isling-be/pkg/logger"
 	"net/http"
 	"strconv"
 
@@ -13,13 +12,11 @@ import (
 )
 
 type RoomRouter struct {
-	log    logger.Interface
 	roomUC usecase.RoomUsecase
 }
 
-func NewRoomRouter(log logger.Interface, roomUC usecase.RoomUsecase) *RoomRouter {
+func NewRoomRouter(roomUC usecase.RoomUsecase) *RoomRouter {
 	return &RoomRouter{
-		log:    log,
 		roomUC: roomUC,
 	}
 }

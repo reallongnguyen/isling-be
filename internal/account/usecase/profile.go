@@ -6,20 +6,17 @@ import (
 	"isling-be/internal/account/entity"
 	"isling-be/internal/account/usecase/request"
 	common_entity "isling-be/internal/common/entity"
-	"isling-be/pkg/logger"
 )
 
 type ProfileUC struct {
 	repo ProfileRepository
-	log  logger.Interface
 }
 
 var _ AccountUsecase = (*AccountUC)(nil)
 
-func NewProfileUC(repo ProfileRepository, log logger.Interface) ProfileUsecase {
+func NewProfileUC(repo ProfileRepository) ProfileUsecase {
 	return &ProfileUC{
 		repo: repo,
-		log:  log,
 	}
 }
 

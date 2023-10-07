@@ -8,20 +8,17 @@ import (
 	"isling-be/internal/account/usecase"
 	common_mw "isling-be/internal/common/controller/http/middleware"
 	common_entity "isling-be/internal/common/entity"
-	"isling-be/pkg/logger"
 
 	"github.com/labstack/echo/v4"
 )
 
 type AuthRouter struct {
-	log       logger.Interface
 	authUC    usecase.AuthUsecase
 	accountUC usecase.AccountUsecase
 }
 
-func NewAuthRouter(e *echo.Group, log logger.Interface, authUC usecase.AuthUsecase, accountUC usecase.AccountUsecase) *AuthRouter {
+func NewAuthRouter(e *echo.Group, authUC usecase.AuthUsecase, accountUC usecase.AccountUsecase) *AuthRouter {
 	router := &AuthRouter{
-		log:       log,
 		authUC:    authUC,
 		accountUC: accountUC,
 	}

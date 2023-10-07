@@ -10,7 +10,7 @@ import (
 	"isling-be/internal/account/usecase/request"
 	common_entity "isling-be/internal/common/entity"
 	common_uc "isling-be/internal/common/usecase"
-	"isling-be/pkg/logger"
+	"isling-be/pkg/facade"
 	"time"
 
 	"isling-be/config"
@@ -26,7 +26,6 @@ const (
 var cfg, _ = config.NewConfig()
 
 type AuthUC struct {
-	log              logger.Interface
 	accountUC        AccountUsecase
 	accountRepo      AccountRepository
 	refreshTokenRepo RefreshTokenRepository
@@ -34,9 +33,8 @@ type AuthUC struct {
 
 var _ AuthUsecase = (*AuthUC)(nil)
 
-func NewAuthUsecase(log logger.Interface, accountUC AccountUsecase, accountRepo AccountRepository, refreshTokenRepo RefreshTokenRepository) AuthUsecase {
+func NewAuthUsecase(accountUC AccountUsecase, accountRepo AccountRepository, refreshTokenRepo RefreshTokenRepository) AuthUsecase {
 	return &AuthUC{
-		log:              log,
 		accountUC:        accountUC,
 		accountRepo:      accountRepo,
 		refreshTokenRepo: refreshTokenRepo,
@@ -49,7 +47,7 @@ func (authUC *AuthUC) GetTokenByPassword(c context.Context, credential *request.
 	account, err := authUC.accountRepo.FindByUsername(c, credential.Email)
 
 	if err != nil && errors.Is(err, common_entity.ErrNoRows) {
-		authUC.log.Warn("auth usecase: get token by password: not found email: %s", credential.Email)
+		facade.Log().Warn("auth usecase: get token by password: not found email: %s", credential.Email)
 
 		return nil, common_entity.ErrAccountNotFound
 	}
@@ -59,7 +57,7 @@ func (authUC *AuthUC) GetTokenByPassword(c context.Context, credential *request.
 	}
 
 	if !common_uc.IsMatchHashAndPassword(account.EncryptedPassword, credential.Password) {
-		authUC.log.Warn("auth usecase: get token by password: email password not match. Email: %s", credential.Email)
+		facade.Log().Warn("auth usecase: get token by password: email password not match. Email: %s", credential.Email)
 
 		return nil, common_entity.ErrEmailPasswordNotMatch
 	}

@@ -1,12 +1,13 @@
 package app
 
 import (
+	"isling-be/config"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
+	"github.com/labstack/echo-contrib/echoprometheus"
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
-	"github.com/prometheus/client_golang/prometheus/promhttp"
 	echo_swagger "github.com/swaggo/echo-swagger"
 )
 
@@ -36,17 +37,45 @@ func NewCustomValidator() *CustomValidator {
 
 // @host https://api.isling.me
 // @BasePath /v1.
-func configHTTPServer(handler *echo.Echo) {
+func configHTTPServer(config *config.Config, handler *echo.Echo) {
+	if config.App.ENV != "development" {
+		handler.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(32)))
+	}
+
 	handler.Use(middleware.Logger())
 	handler.Use(middleware.Recover())
 	handler.Use(middleware.CORS())
+	handler.Use(echoprometheus.NewMiddleware(config.App.Name))
 	handler.Validator = NewCustomValidator()
+
+	// health check
+	handler.GET("/health", func(c echo.Context) error {
+		return c.NoContent(http.StatusOK)
+	})
 
 	handler.GET("/healthz", func(c echo.Context) error {
 		return c.NoContent(http.StatusOK)
 	})
 
-	handler.GET("/metrics", echo.WrapHandler(promhttp.Handler()))
+	// stress test empty case
+	handler.GET("/stress-test", func(c echo.Context) error {
+		return c.NoContent(http.StatusOK)
+	})
+
+	handler.POST("/stress-test", func(c echo.Context) error {
+		body := new(struct {
+			title       string
+			description string
+		})
+
+		if err := c.Bind(body); err != nil {
+			return c.NoContent(http.StatusBadRequest)
+		}
+
+		return c.NoContent(http.StatusOK)
+	})
+
+	handler.GET("/metrics", echoprometheus.NewHandler())
 
 	handler.GET("/swagger/*", echo_swagger.WrapHandler)
 }

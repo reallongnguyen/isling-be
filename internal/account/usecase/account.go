@@ -11,21 +11,19 @@ import (
 	"isling-be/internal/account/usecase/request"
 	common_entity "isling-be/internal/common/entity"
 	common_uc "isling-be/internal/common/usecase"
-	"isling-be/pkg/logger"
+	"isling-be/pkg/facade"
 )
 
 type AccountUC struct {
 	repo   AccountRepository
-	log    logger.Interface
 	msgBus *map[string]chan string
 }
 
 var _ AccountUsecase = (*AccountUC)(nil)
 
-func NewAccountUC(repo AccountRepository, log logger.Interface, msgBus *map[string]chan string) AccountUsecase {
+func NewAccountUC(repo AccountRepository, msgBus *map[string]chan string) AccountUsecase {
 	return &AccountUC{
 		repo:   repo,
-		log:    log,
 		msgBus: msgBus,
 	}
 }
@@ -36,20 +34,20 @@ func (uc *AccountUC) CreateAccount(ctx context.Context, createAccountReq request
 	// check user exist
 	usernameAvailable, err := uc.checkUsernameAvailable(ctx, createAccountReq.Email)
 	if err != nil {
-		uc.log.Error("got error when checkUsernameAvailable" + err.Error())
+		facade.Log().Error("got error when checkUsernameAvailable" + err.Error())
 
 		return nil, err
 	}
 
 	if !usernameAvailable {
-		uc.log.Info("username " + createAccountReq.Email + " already registered")
+		facade.Log().Info("username " + createAccountReq.Email + " already registered")
 
 		return nil, common_entity.ErrEmailDuplicated
 	}
 
 	hashedPassword, err := common_uc.HashPassword(createAccountReq.Password)
 	if err != nil {
-		uc.log.Info("hash password got error:" + err.Error())
+		facade.Log().Info("hash password got error:" + err.Error())
 
 		return nil, err
 	}
@@ -104,19 +102,19 @@ func (uc *AccountUC) ChangePassword(ctx context.Context, accountID common_entity
 	account, err := uc.repo.FindByID(ctx, accountID)
 
 	if err != nil && errors.Is(err, common_entity.ErrNoRows) {
-		uc.log.Warn("account usecase: change password: not found account ID: %s", accountID)
+		facade.Log().Warn("account usecase: change password: not found account ID: %s", accountID)
 
 		return common_entity.ErrAccountNotFound
 	}
 
 	if err != nil {
-		uc.log.Info("account usecase: change password: find one account: %w", err)
+		facade.Log().Info("account usecase: change password: find one account: %w", err)
 
 		return fmt.Errorf("account usecase: change password: find an account %w", err)
 	}
 
 	if !common_uc.IsMatchHashAndPassword(account.EncryptedPassword, changePassReq.OldPassword) {
-		uc.log.Warn("account usecase: change password: password not correct. Account ID: %s", accountID)
+		facade.Log().Warn("account usecase: change password: password not correct. Account ID: %s", accountID)
 
 		return common_entity.ErrPasswordNotCorrect
 	}
@@ -127,7 +125,7 @@ func (uc *AccountUC) ChangePassword(ctx context.Context, accountID common_entity
 	}
 
 	if err := uc.repo.UpdateEncryptedPassword(ctx, accountID, newEncryptedPassword); err != nil {
-		uc.log.Info("account usecase: change password: update encrypted password: %w", err)
+		facade.Log().Info("account usecase: change password: update encrypted password: %w", err)
 
 		return err
 	}

@@ -4,9 +4,10 @@ package postgres
 import (
 	"context"
 	"fmt"
-	"log"
+	"isling-be/pkg/logger"
 	"time"
 
+	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -15,6 +16,19 @@ const (
 	_defaultConnAttempts = 10
 	_defaultConnTimeout  = time.Second
 )
+
+type Logger struct {
+	logger.Interface
+}
+
+func (r *Logger) Log(_ context.Context, _ pgx.LogLevel, _ string, data map[string]interface{}) {
+	sql, ok := data["sql"]
+	if !ok {
+		return
+	}
+
+	r.Debug(sql)
+}
 
 // Postgres -.
 type Postgres struct {
@@ -26,7 +40,7 @@ type Postgres struct {
 }
 
 // New -.
-func New(url string, opts ...Option) (*Postgres, error) {
+func New(url string, log logger.Interface, opts ...Option) (*Postgres, error) {
 	pg := &Postgres{
 		maxPoolSize:  _defaultMaxPoolSize,
 		connAttempts: _defaultConnAttempts,
@@ -45,13 +59,15 @@ func New(url string, opts ...Option) (*Postgres, error) {
 
 	poolConfig.MaxConns = int32(pg.maxPoolSize)
 
+	poolConfig.ConnConfig.Logger = &Logger{Interface: log}
+
 	for pg.connAttempts > 0 {
 		pg.Pool, err = pgxpool.ConnectConfig(context.Background(), poolConfig)
 		if err == nil {
 			break
 		}
 
-		log.Printf("Postgres is trying to connect, attempts left: %d", pg.connAttempts)
+		log.Info("Postgres is trying to connect, attempts left: %d", pg.connAttempts)
 
 		time.Sleep(pg.connTimeout)
 

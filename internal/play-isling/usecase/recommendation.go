@@ -5,36 +5,33 @@ import (
 	"isling-be/config"
 	account_entity "isling-be/internal/account/entity"
 	"isling-be/internal/play-isling/entity"
+	"isling-be/pkg/facade"
 	"strconv"
 	"time"
 
+	"github.com/facebookgo/muster"
 	"github.com/zhenghaoz/gorse/client"
 	"golang.org/x/exp/slices"
 )
 
-var feedbackTypes = []string{
-	"read",
-	"comment",
-	"like",
-	"share",
-	"save",
-	"reaction",
-	"add-item",
-	"watch-15min",
-	"watch-1h",
-}
-
 type RecommendationUC struct {
-	gorse *client.GorseClient
+	gorse         *client.GorseClient
+	InsertFBBatch *InsertFeedbackBatch
 }
 
 var _ RecommendationUsecase = (*RecommendationUC)(nil)
 
 var cfg, _ = config.NewConfig()
 
-func NewRecommendationUC() RecommendationUsecase {
+func NewRecommendationUC() *RecommendationUC {
+	gorse := client.NewGorseClient(cfg.GORSE.URL, cfg.GORSE.APIKey)
+	insertFBBatch := NewInsertFeedbackBatch(gorse)
+
+	insertFBBatch.Start()
+
 	return &RecommendationUC{
-		gorse: client.NewGorseClient(cfg.GORSE.URL, cfg.GORSE.APIKey),
+		gorse:         gorse,
+		InsertFBBatch: insertFBBatch,
 	}
 }
 
@@ -72,25 +69,64 @@ func (uc *RecommendationUC) HideItem(c context.Context, itemID string) error {
 	return err
 }
 
-func (uc *RecommendationUC) InsertFeedback(c context.Context, actions []CreateActionRequest) error {
-	feedbacks := make([]client.Feedback, 0, 8)
+func (uc *RecommendationUC) InsertFeedback(_ context.Context, feedback client.Feedback) error {
+	uc.InsertFBBatch.Add(feedback)
 
-	for _, action := range actions {
-		if action.ObjectID == nil || !slices.Contains(feedbackTypes, action.Type) {
-			continue
-		}
+	return nil
+}
 
-		feedback := client.Feedback{
-			FeedbackType: action.Type,
-			UserId:       strconv.FormatInt(int64(action.AccountID), 10),
-			ItemId:       *action.ObjectID,
-			Timestamp:    action.Timestamp.Format(time.RFC3339),
-		}
+type InsertFeedbackBatch struct {
+	MaxBatchSize        uint
+	BatchTimeout        time.Duration
+	PendingWorkCapacity uint
+	muster              muster.Client
+	gorse               *client.GorseClient
+}
 
-		feedbacks = append(feedbacks, feedback)
+func NewInsertFeedbackBatch(gorse *client.GorseClient) *InsertFeedbackBatch {
+	return &InsertFeedbackBatch{
+		gorse:               gorse,
+		MaxBatchSize:        1000,
+		BatchTimeout:        60 * time.Second,
+		PendingWorkCapacity: 8000,
 	}
+}
 
-	_, err := uc.gorse.PutFeedback(c, feedbacks)
+func (r *InsertFeedbackBatch) Start() error {
+	r.muster.MaxBatchSize = r.MaxBatchSize
+	r.muster.BatchTimeout = r.BatchTimeout
+	r.muster.PendingWorkCapacity = r.PendingWorkCapacity
+	r.muster.BatchMaker = func() muster.Batch { return &FeedbackBatch{client: r} }
 
-	return err
+	return r.muster.Start()
+}
+
+func (r *InsertFeedbackBatch) Stop() error {
+	return r.muster.Stop()
+}
+
+func (r *InsertFeedbackBatch) Add(item client.Feedback) {
+	r.muster.Work <- item
+}
+
+type FeedbackBatch struct {
+	client *InsertFeedbackBatch
+	Items  []client.Feedback
+}
+
+func (r *FeedbackBatch) Add(item any) {
+	r.Items = append(r.Items, item.(client.Feedback))
+}
+
+func (r *FeedbackBatch) Fire(notifier muster.Notifier) {
+	defer notifier.Done()
+
+	uniqItems := slices.CompactFunc(r.Items, func(f1, f2 client.Feedback) bool {
+		return f1.UserId == f2.UserId && f1.ItemId == f2.ItemId && f1.FeedbackType == f2.FeedbackType
+	})
+
+	_, err := r.client.gorse.PutFeedback(context.Background(), uniqItems)
+	if err != nil {
+		facade.Log().Error("feedbackBatch fire: %w", err)
+	}
 }

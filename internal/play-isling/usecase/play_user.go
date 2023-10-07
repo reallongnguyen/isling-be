@@ -3,21 +3,18 @@ package usecase
 import (
 	"context"
 	common_entity "isling-be/internal/common/entity"
-	"isling-be/pkg/logger"
 
 	"golang.org/x/exp/slices"
 )
 
 type PlayUser struct {
-	log  logger.Interface
 	repo PlayUserRepository
 }
 
 var _ PlayUserUsecase = (*PlayUser)(nil)
 
-func NewPlayUserUC(log logger.Interface, repo PlayUserRepository) PlayUserUsecase {
+func NewPlayUserUC(repo PlayUserRepository) PlayUserUsecase {
 	return &PlayUser{
-		log:  log,
 		repo: repo,
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"context"
 	common_entity "isling-be/internal/common/entity"
 	"isling-be/internal/play-isling/entity"
-	"isling-be/pkg/logger"
 	"math"
 	"strconv"
 
@@ -13,7 +12,6 @@ import (
 )
 
 type HomeUC struct {
-	log          logger.Interface
 	playUserRepo PlayUserRepository
 	roomRepo     RoomRepository
 	gorse        *client.GorseClient
@@ -21,9 +19,8 @@ type HomeUC struct {
 
 var _ HomeUsecase = (*HomeUC)(nil)
 
-func NewHomeUsecase(log logger.Interface, playUserRepo PlayUserRepository, roomRepo RoomRepository) HomeUsecase {
+func NewHomeUsecase(playUserRepo PlayUserRepository, roomRepo RoomRepository) HomeUsecase {
 	return &HomeUC{
-		log:          log,
 		playUserRepo: playUserRepo,
 		roomRepo:     roomRepo,
 		gorse:        client.NewGorseClient(cfg.GORSE.URL, cfg.GORSE.APIKey),

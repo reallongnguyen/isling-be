@@ -3,9 +3,11 @@ package playisling
 import (
 	"context"
 	"encoding/json"
+	"isling-be/config"
 	acc_entity "isling-be/internal/account/entity"
 	"isling-be/internal/common/controller/http/middleware"
 	v1 "isling-be/internal/play-isling/controller/http/v1"
+	"isling-be/internal/play-isling/controller/worker"
 	"isling-be/internal/play-isling/entity"
 	"isling-be/internal/play-isling/repo"
 	"isling-be/internal/play-isling/usecase"
@@ -13,23 +15,24 @@ import (
 	"isling-be/pkg/postgres"
 	"strconv"
 
+	"github.com/dgraph-io/ristretto"
 	"github.com/labstack/echo/v4"
 )
 
-func Register(l logger.Interface, handler *echo.Echo, pg *postgres.Postgres, msgBus *map[string]chan string) {
+func Register(l logger.Interface, cfg *config.Config, cache *ristretto.Cache, handler *echo.Echo, pg *postgres.Postgres, msgBus *map[string]chan string) func() {
 	protectedRoutes := handler.Group("", middleware.VerifyJWT())
 
 	roomRepo := repo.NewRoomRepo(pg)
 	playUserRepo := repo.NewPlayUserRepo(pg)
 
-	roomUC := usecase.NewRoomUsecase(l, roomRepo, msgBus)
-	homeUC := usecase.NewHomeUsecase(l, playUserRepo, roomRepo)
+	roomUC := usecase.NewRoomUsecase(roomRepo, msgBus)
+	homeUC := usecase.NewHomeUsecase(playUserRepo, roomRepo)
 	recommendationUC := usecase.NewRecommendationUC()
-	playUserUC := usecase.NewPlayUserUC(l, playUserRepo)
+	playUserUC := usecase.NewPlayUserUC(playUserRepo)
 
-	roomRouter := v1.NewRoomRouter(l, roomUC)
-	homeRouter := v1.NewHomeRouter(l, homeUC)
-	trackingRouter := v1.NewTrackingRouter(l, recommendationUC, playUserUC)
+	roomRouter := v1.NewRoomRouter(roomUC)
+	homeRouter := v1.NewHomeRouter(homeUC)
+	trackingRouter := v1.NewTrackingRouter(recommendationUC, playUserUC)
 
 	{
 		protectedRoutes.POST("/play-isling/v1/rooms", roomRouter.Create)
@@ -43,6 +46,11 @@ func Register(l logger.Interface, handler *echo.Echo, pg *postgres.Postgres, msg
 
 		protectedRoutes.POST("/play-isling/v1/actions", trackingRouter.Create)
 	}
+
+	userActChan := (*msgBus)["userActivityOnItem"]
+	gorseETLWorker := worker.NewGorseETL(userActChan, recommendationUC)
+
+	gorseETLWorker.Run()
 
 	go func() {
 		if msgBus == nil {
@@ -129,4 +137,10 @@ func Register(l logger.Interface, handler *echo.Echo, pg *postgres.Postgres, msg
 			}
 		}
 	}()
+
+	return func() {
+		if err := recommendationUC.InsertFBBatch.Stop(); err != nil {
+			l.Error("play-isling module: insertFBBatch stop: %w", err)
+		}
+	}
 }

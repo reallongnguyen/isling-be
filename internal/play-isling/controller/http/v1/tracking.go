@@ -6,22 +6,35 @@ import (
 	"isling-be/internal/common/controller/http/middleware"
 	"isling-be/internal/play-isling/controller/http/v1/dto"
 	"isling-be/internal/play-isling/usecase"
-	"isling-be/pkg/logger"
+	"isling-be/pkg/facade"
 	"strconv"
 	"strings"
+	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/zhenghaoz/gorse/client"
+	"golang.org/x/exp/slices"
 )
 
+var feedbackTypes = []string{
+	"read",
+	"comment",
+	"like",
+	"share",
+	"save",
+	"reaction",
+	"add-item",
+	"watch-15min",
+	"watch-1h",
+}
+
 type TrackingRouter struct {
-	log              logger.Interface
 	recommendationUC usecase.RecommendationUsecase
 	playUserUC       usecase.PlayUserUsecase
 }
 
-func NewTrackingRouter(log logger.Interface, recommendationUC usecase.RecommendationUsecase, playUserUC usecase.PlayUserUsecase) *TrackingRouter {
+func NewTrackingRouter(recommendationUC usecase.RecommendationUsecase, playUserUC usecase.PlayUserUsecase) *TrackingRouter {
 	return &TrackingRouter{
-		log:              log,
 		recommendationUC: recommendationUC,
 		playUserUC:       playUserUC,
 	}
@@ -42,7 +55,20 @@ func (r *TrackingRouter) Create(c echo.Context) error {
 		return appresponse.ResponseCustomError(c, 400, "validation error", []error{err})
 	}
 
-	err = r.recommendationUC.InsertFeedback(c.Request().Context(), []usecase.CreateActionRequest{*createActionDTO.ToCreateActionRequest(accountID)})
+	action := *createActionDTO.ToCreateActionRequest(accountID)
+
+	if action.ObjectID == nil || !slices.Contains(feedbackTypes, action.Type) {
+		return appresponse.ResponseSuccess(c, true)
+	}
+
+	feedback := client.Feedback{
+		FeedbackType: action.Type,
+		UserId:       strconv.FormatInt(int64(action.AccountID), 10),
+		ItemId:       *action.ObjectID,
+		Timestamp:    action.Timestamp.Format(time.RFC3339),
+	}
+
+	err = r.recommendationUC.InsertFeedback(c.Request().Context(), feedback)
 	if err != nil {
 		return appresponse.ResponseError(c, err)
 	}
@@ -51,7 +77,7 @@ func (r *TrackingRouter) Create(c echo.Context) error {
 		go func() {
 			roomID, err := strconv.Atoi(*createActionDTO.ObjectID)
 			if err != nil {
-				r.log.Error("tracking router: parse ObjectID: %w", err)
+				facade.Log().Error("tracking router: parse ObjectID: %w", err)
 
 				return
 			}
@@ -60,7 +86,7 @@ func (r *TrackingRouter) Create(c echo.Context) error {
 
 			err = r.playUserUC.InsertRecentlyJoinedRoom(ctx, accountID, int64(roomID))
 			if err != nil {
-				r.log.Error("tracking router: insert recently joined room: %w", err)
+				facade.Log().Error("tracking router: insert recently joined room: %w", err)
 			}
 		}()
 	}

@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	common_entity "isling-be/internal/common/entity"
 	"isling-be/internal/play-isling/entity"
-	"isling-be/pkg/logger"
 	"strings"
 
 	"github.com/gosimple/slug"
@@ -14,7 +13,6 @@ import (
 
 type (
 	RoomUC struct {
-		log      logger.Interface
 		roomRepo RoomRepository
 		msgBus   *map[string]chan string
 	}
@@ -28,9 +26,8 @@ const (
 
 var _ RoomUsecase = (*RoomUC)(nil)
 
-func NewRoomUsecase(log logger.Interface, roomRepo RoomRepository, msgBus *map[string]chan string) *RoomUC {
+func NewRoomUsecase(roomRepo RoomRepository, msgBus *map[string]chan string) *RoomUC {
 	return &RoomUC{
-		log:      log,
 		roomRepo: roomRepo,
 		msgBus:   msgBus,
 	}

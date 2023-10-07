@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"errors"
 	"fmt"
 	"isling-be/config"
 	"isling-be/internal/common/entity"
@@ -19,7 +20,9 @@ func VerifyJWT() echo.MiddlewareFunc {
 		ErrorHandler: func(c echo.Context, err error) error {
 			customErr := fmt.Errorf("access token: %w", err)
 
-			return entity.ResponseError(c, http.StatusUnauthorized, "unauthorized", []error{customErr})
+			entity.ResponseError(c, http.StatusUnauthorized, "unauthorized", []error{customErr})
+
+			return err
 		},
 		ContextKey: "account",
 	})
@@ -29,6 +32,12 @@ func ParseJWT() echo.MiddlewareFunc {
 	return echo_jwt.WithConfig(echo_jwt.Config{
 		SigningKey: []byte(cfg.JWT.JWTSecretKey),
 		ErrorHandler: func(c echo.Context, err error) error {
+			if errors.Is(err, echo_jwt.ErrJWTInvalid) {
+				entity.ResponseError(c, http.StatusUnauthorized, "unauthorized", []error{err})
+
+				return err
+			}
+
 			return nil
 		},
 		ContinueOnIgnoredError: true,

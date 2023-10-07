@@ -8,18 +8,17 @@ import (
 	"isling-be/internal/account/usecase"
 	common_mw "isling-be/internal/common/controller/http/middleware"
 	common_entity "isling-be/internal/common/entity"
-	"isling-be/pkg/logger"
+	"isling-be/pkg/facade"
 
 	"github.com/labstack/echo/v4"
 )
 
 type ProfilesRouter struct {
 	profileUC usecase.ProfileUsecase
-	log       logger.Interface
 }
 
-func NewProfilesRouter(e *echo.Group, profileUC usecase.ProfileUsecase, log logger.Interface) *ProfilesRouter {
-	router := ProfilesRouter{profileUC: profileUC, log: log}
+func NewProfilesRouter(e *echo.Group, profileUC usecase.ProfileUsecase) *ProfilesRouter {
+	router := ProfilesRouter{profileUC: profileUC}
 	group := e.Group("/profiles", common_mw.VerifyJWT())
 	group.POST("/me", router.create)
 	group.GET("/me", router.getProfile)
@@ -63,7 +62,7 @@ func (router *ProfilesRouter) getProfile(c echo.Context) error {
 	profile, err := router.profileUC.GetProfile(c.Request().Context(), accountID)
 
 	if errors.Is(err, common_entity.ErrAccountNotFound) {
-		router.log.Info("get profile: account id %d not found", accountID)
+		facade.Log().Info("get profile: account id %d not found", accountID)
 
 		return common_entity.ResponseError(c, http.StatusUnauthorized, "invalid account", []error{err})
 	}
