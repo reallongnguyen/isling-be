@@ -1,8 +1,7 @@
-package repo
+package usecase
 
 import (
 	"isling-be/internal/event-tracking/entity"
-	"isling-be/internal/event-tracking/usecase"
 	"time"
 
 	"github.com/facebookgo/muster"
@@ -14,7 +13,7 @@ type UserActBatch struct {
 	BatchTimeout        time.Duration
 	PendingWorkCapacity uint
 	muster              muster.Client
-	UserActRepo         usecase.UserActRepository
+	UserActRepo         UserActRepository
 }
 
 func (r *UserActBatch) Start() error {

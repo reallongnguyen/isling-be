@@ -39,13 +39,14 @@ func NewCustomValidator() *CustomValidator {
 // @BasePath /v1.
 func configHTTPServer(config *config.Config, handler *echo.Echo) {
 	if config.App.ENV != "development" {
-		handler.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(32)))
+		handler.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(1024)))
 	}
 
 	handler.Use(middleware.Logger())
 	handler.Use(middleware.Recover())
 	handler.Use(middleware.CORS())
 	handler.Use(echoprometheus.NewMiddleware(config.App.Name))
+	handler.Use(middleware.Secure())
 	handler.Validator = NewCustomValidator()
 
 	// health check

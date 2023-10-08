@@ -14,9 +14,9 @@ type AppSuccessRes[T any] struct {
 }
 
 type AppErrorRes struct {
-	Code    int    `json:"code"`
-	Message string `json:"message,omitempty"`
-	Errors  []*errormessage.HTTPError
+	Code    int                       `json:"code"`
+	Message string                    `json:"message,omitempty"`
+	Errors  []*errormessage.HTTPError `json:"errors"`
 }
 
 func ResponseSuccess[T any](c echo.Context, data T) error {

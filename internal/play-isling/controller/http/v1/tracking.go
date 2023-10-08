@@ -40,6 +40,7 @@ func NewTrackingRouter(recommendationUC usecase.RecommendationUsecase, playUserU
 	}
 }
 
+// Deprecated.
 func (r *TrackingRouter) Create(c echo.Context) error {
 	accountID, err := middleware.GetAccountIDFromJWT(c)
 	if err != nil {

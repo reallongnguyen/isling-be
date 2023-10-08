@@ -7,6 +7,7 @@ import (
 	"isling-be/internal/play-isling/entity"
 	"isling-be/pkg/facade"
 	"strconv"
+	"strings"
 	"time"
 
 	"github.com/facebookgo/muster"
@@ -120,6 +121,18 @@ func (r *FeedbackBatch) Add(item any) {
 
 func (r *FeedbackBatch) Fire(notifier muster.Notifier) {
 	defer notifier.Done()
+
+	slices.SortFunc(r.Items, func(f1, f2 client.Feedback) int {
+		if f1.UserId != f2.UserId {
+			return strings.Compare(f1.UserId, f2.UserId)
+		}
+
+		if f1.ItemId != f2.ItemId {
+			return strings.Compare(f1.ItemId, f2.ItemId)
+		}
+
+		return strings.Compare(f1.FeedbackType, f2.FeedbackType)
+	})
 
 	uniqItems := slices.CompactFunc(r.Items, func(f1, f2 client.Feedback) bool {
 		return f1.UserId == f2.UserId && f1.ItemId == f2.ItemId && f1.FeedbackType == f2.FeedbackType

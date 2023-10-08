@@ -117,6 +117,14 @@ services:
   #   depends_on:
   #     - app
 
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - prometheus-data:/prometheus
+
 volumes:
   pg-data:
   worker_data:
@@ -124,3 +132,4 @@ volumes:
   master_data:
   gorse_log:
   surreal_data:
+  prometheus-data:

@@ -3,7 +3,6 @@ package playisling
 import (
 	"context"
 	"encoding/json"
-	"isling-be/config"
 	acc_entity "isling-be/internal/account/entity"
 	"isling-be/internal/common/controller/http/middleware"
 	v1 "isling-be/internal/play-isling/controller/http/v1"
@@ -11,21 +10,21 @@ import (
 	"isling-be/internal/play-isling/entity"
 	"isling-be/internal/play-isling/repo"
 	"isling-be/internal/play-isling/usecase"
-	"isling-be/pkg/logger"
+	"isling-be/pkg/facade"
 	"isling-be/pkg/postgres"
+	"isling-be/pkg/surreal"
 	"strconv"
 
-	"github.com/dgraph-io/ristretto"
 	"github.com/labstack/echo/v4"
 )
 
-func Register(l logger.Interface, cfg *config.Config, cache *ristretto.Cache, handler *echo.Echo, pg *postgres.Postgres, msgBus *map[string]chan string) func() {
+func Register(handler *echo.Echo, pg *postgres.Postgres, sur *surreal.Surreal) func() {
 	protectedRoutes := handler.Group("", middleware.VerifyJWT())
 
 	roomRepo := repo.NewRoomRepo(pg)
 	playUserRepo := repo.NewPlayUserRepo(pg)
 
-	roomUC := usecase.NewRoomUsecase(roomRepo, msgBus)
+	roomUC := usecase.NewRoomUsecase(roomRepo)
 	homeUC := usecase.NewHomeUsecase(playUserRepo, roomRepo)
 	recommendationUC := usecase.NewRecommendationUC()
 	playUserUC := usecase.NewPlayUserUC(playUserRepo)
@@ -47,100 +46,72 @@ func Register(l logger.Interface, cfg *config.Config, cache *ristretto.Cache, ha
 		protectedRoutes.POST("/play-isling/v1/actions", trackingRouter.Create)
 	}
 
-	userActChan := (*msgBus)["userActivityOnItem"]
-	gorseETLWorker := worker.NewGorseETL(userActChan, recommendationUC)
-
+	gorseETLWorker := worker.NewGorseETL(recommendationUC)
 	gorseETLWorker.Run()
 
+	roomAudCounter := worker.NewRoomAudCounter(sur)
+	roomAudCounter.Run()
+
+	watchAgainUpdater := worker.NewWatchAgainUpdater(playUserUC)
+	watchAgainUpdater.Run()
+
+	// TODO: move to worker
 	go func() {
-		if msgBus == nil {
-			return
-		}
-
-		accountCreatedChan, ok := (*msgBus)["accountCreated"]
-		if !ok {
-			return
-		}
-
-		for acc := range accountCreatedChan {
+		handler := func(uuid string, payload []byte, metadata map[string]string) error {
 			account := new(acc_entity.Account)
 
-			err := json.Unmarshal([]byte(acc), account)
+			err := json.Unmarshal(payload, account)
 			if err != nil {
-				return
+				return nil
 			}
 
 			ctx := context.Background()
-
-			err = recommendationUC.InsertUser(ctx, account)
-			if err != nil {
-				l.Error("insert user in recommendation: %w", err)
-			}
 
 			_, err = playUserRepo.Create(ctx, account.ID)
 			if err != nil {
-				l.Error("create play user: %w", err)
+				facade.Log().Error("create play user: %w", err)
+
+				return err
 			}
+
+			return nil
+		}
+
+		err := facade.MsgBus().Subscribe("account.created", handler)
+		if err != nil {
+			facade.Log().Error("subscribe topic 'account.created' error %w", err)
 		}
 	}()
 
+	// TODO: move to worker
 	go func() {
-		if msgBus == nil {
-			return
-		}
-
-		roomCreatedChan, ok := (*msgBus)["roomCreated"]
-		if !ok {
-			return
-		}
-
-		for acc := range roomCreatedChan {
+		handler := func(uuid string, payload []byte, metadata map[string]string) error {
 			room := new(entity.Room)
 
-			err := json.Unmarshal([]byte(acc), room)
+			err := json.Unmarshal(payload, room)
 			if err != nil {
-				return
-			}
-
-			ctx := context.Background()
-
-			err = recommendationUC.InsertRoom(ctx, room)
-			if err != nil {
-				l.Error("insert room in recommendation: %w", err)
-			}
-		}
-	}()
-
-	go func() {
-		if msgBus == nil {
-			return
-		}
-
-		roomDeletedChan, ok := (*msgBus)["roomDeleted"]
-		if !ok {
-			return
-		}
-
-		for acc := range roomDeletedChan {
-			room := new(entity.Room)
-
-			err := json.Unmarshal([]byte(acc), room)
-			if err != nil {
-				return
+				return nil
 			}
 
 			ctx := context.Background()
 
 			err = recommendationUC.HideItem(ctx, strconv.FormatInt(room.ID, 10))
 			if err != nil {
-				l.Error("hide room in recommendation: %w", err)
+				facade.Log().Error("hide room in recommendation: %w", err)
 			}
+
+			return nil
+		}
+
+		err := facade.MsgBus().Subscribe("room.deleted", handler)
+		if err != nil {
+			facade.Log().Error("subscribe topic 'room.deleted' error %w", err)
 		}
 	}()
 
 	return func() {
 		if err := recommendationUC.InsertFBBatch.Stop(); err != nil {
-			l.Error("play-isling module: insertFBBatch stop: %w", err)
+			facade.Log().Error("play-isling module: insertFBBatch stop: %w", err)
 		}
 	}
 }

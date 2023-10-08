@@ -72,6 +72,18 @@ func (repo *PlayUserRepo) Update(c context.Context, accountID common_entity.Acco
 	return err
 }
 
+func (repo *PlayUserRepo) InsertRecentlyJoinedRoom(c context.Context, accountID common_entity.AccountID, roomID int64) error {
+	sql := `
+		UPDATE play_users
+		SET recently_joined_rooms = jsonb_insert(recently_joined_rooms, '{0}', $2)
+		WHERE account_id = $1
+	`
+
+	_, err := repo.Pool.Exec(c, sql, accountID, roomID)
+
+	return err
+}
+
 func rowToPlayUser(row pgx.Row) (*entity.PlayUser, error) {
 	playUser := new(entity.PlayUser)
 

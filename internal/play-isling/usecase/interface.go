@@ -46,6 +46,7 @@ type (
 		GetOne(c context.Context, accountID common_entity.AccountID) (*entity.PlayUser, error)
 		Create(c context.Context, accountID common_entity.AccountID) (*entity.PlayUser, error)
 		Update(c context.Context, accountID common_entity.AccountID, playUser *entity.PlayUser) error
+		InsertRecentlyJoinedRoom(c context.Context, accountID common_entity.AccountID, roomID int64) error
 	}
 
 	PlayUserUsecase interface {

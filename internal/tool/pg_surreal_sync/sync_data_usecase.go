@@ -3,31 +3,29 @@ package pg_surreal_sync
 import (
 	"encoding/json"
 	"fmt"
-	"isling-be/pkg/logger"
+	"isling-be/pkg/facade"
 	"isling-be/pkg/surreal"
 	"strings"
 )
 
 type SyncDataUsecase struct {
-	sr  *surreal.Surreal
-	log logger.Interface
+	sr *surreal.Surreal
 }
 
-func NewSyncDataUsecase(log logger.Interface, sr *surreal.Surreal) *SyncDataUsecase {
+func NewSyncDataUsecase(sr *surreal.Surreal) *SyncDataUsecase {
 	return &SyncDataUsecase{
-		sr:  sr,
-		log: log,
+		sr: sr,
 	}
 }
 
 func (r *SyncDataUsecase) Handle(payload *Payload) error {
-	r.log.Debug("pg_surreal_sync: receive msg: %w", *payload)
+	facade.Log().Debug("pg_surreal_sync: receive msg: %w", *payload)
 
 	switch payload.Table {
 	case "profiles":
 		profile := new(Profile)
 		if err := json.Unmarshal([]byte(payload.Data), profile); err != nil {
-			r.log.Error("pg_surreal_sync: parse profile mess: %w", err)
+			facade.Log().Error("pg_surreal_sync: parse profile mess: %w", err)
 
 			return err
 		}
@@ -37,7 +35,7 @@ func (r *SyncDataUsecase) Handle(payload *Payload) error {
 		if payload.Type == "DELETE" {
 			_, err := r.sr.Delete(userID)
 			if err != nil {
-				r.log.Error("SyncDataUsecase: delete user: %w", err)
+				facade.Log().Error("SyncDataUsecase: delete user: %w", err)
 			}
 
 			break
@@ -54,12 +52,12 @@ func (r *SyncDataUsecase) Handle(payload *Payload) error {
 
 		_, err := r.sr.Update(user.ID, user)
 		if err != nil {
-			r.log.Error("SyncDataUsecase: update user: %w", err)
+			facade.Log().Error("SyncDataUsecase: update user: %w", err)
 		}
 	case "media_rooms":
 		room := new(Room)
 		if err := json.Unmarshal([]byte(payload.Data), room); err != nil {
-			r.log.Error("pg_surreal_sync: parse media_rooms mess: %w", err)
+			facade.Log().Error("pg_surreal_sync: parse media_rooms mess: %w", err)
 
 			return err
 		}
@@ -71,7 +69,7 @@ func (r *SyncDataUsecase) Handle(payload *Payload) error {
 		if payload.Type == "DELETE" {
 			_, err := r.sr.Delete(srRoomID)
 			if err != nil {
-				r.log.Error("SyncDataUsecase: delete media_rooms: %w", err)
+				facade.Log().Error("SyncDataUsecase: delete media_rooms: %w", err)
 			}
 
 			break
@@ -90,7 +88,7 @@ func (r *SyncDataUsecase) Handle(payload *Payload) error {
 
 		_, err := r.sr.Update(srRoom.ID, srRoom)
 		if err != nil {
-			r.log.Error("SyncDataUsecase: update room: %w", err)
+			facade.Log().Error("SyncDataUsecase: update room: %w", err)
 		}
 	default:
 	}

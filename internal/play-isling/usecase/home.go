@@ -174,7 +174,23 @@ func (uc *HomeUC) getRecentlyRooms(c context.Context, accountID common_entity.Ac
 		return nil
 	}
 
-	recentlyRooms, err := uc.roomRepo.FindMany(c, &FindRoomFilter{IDIn: &playUser.RecentlyJoinedRooms}, nil)
+	seen := make(map[int64]struct{})
+	recentlyJoinRoomIdSet := make([]int64, 0, 16)
+
+	for _, id := range playUser.RecentlyJoinedRooms {
+		if _, found := seen[id]; found {
+			continue
+		}
+
+		seen[id] = struct{}{}
+		recentlyJoinRoomIdSet = append(recentlyJoinRoomIdSet, id)
+
+		if len(recentlyJoinRoomIdSet) > 16 {
+			break
+		}
+	}
+
+	recentlyRooms, err := uc.roomRepo.FindMany(c, &FindRoomFilter{IDIn: &recentlyJoinRoomIdSet}, nil)
 	if err != nil {
 		return nil
 	}
@@ -187,7 +203,7 @@ func (uc *HomeUC) getRecentlyRooms(c context.Context, accountID common_entity.Ac
 
 	recentlyPublicRooms := make([]*entity.RoomPublic, 0, len(recentlyRooms.Edges))
 
-	for _, roomID := range playUser.RecentlyJoinedRooms {
+	for _, roomID := range recentlyJoinRoomIdSet {
 		if roomPublic, ok := mapIDRoomPublic[roomID]; ok {
 			recentlyPublicRooms = append(recentlyPublicRooms, roomPublic)
 		}

@@ -2,19 +2,18 @@ package eventtracking
 
 import (
 	"encoding/json"
-	"isling-be/config"
 	appresponse "isling-be/internal/common/controller/http"
 	"isling-be/internal/common/controller/http/middleware"
 	cm_entity "isling-be/internal/common/entity"
 	"isling-be/internal/event-tracking/entity"
 	"isling-be/internal/event-tracking/repo"
-	"isling-be/pkg/logger"
+	"isling-be/internal/event-tracking/usecase"
+	"isling-be/pkg/facade"
 	"isling-be/pkg/surreal"
 	"net/http"
 	"strconv"
 	"time"
 
-	"github.com/dgraph-io/ristretto"
 	"github.com/labstack/echo/v4"
 	"github.com/mileusna/useragent"
 	"golang.org/x/exp/slices"
@@ -33,14 +32,10 @@ var eventOnItems = []string{
 }
 
 func Register(
-	l logger.Interface,
-	cfg *config.Config,
-	cache *ristretto.Cache,
 	handler *echo.Echo,
 	sur *surreal.Surreal,
-	msgBus *map[string]chan string,
 ) func() {
-	userActRepo := repo.UserActBatch{
+	userActRepo := usecase.UserActBatch{
 		MaxBatchSize:        10000,
 		BatchTimeout:        2 * time.Second,
 		PendingWorkCapacity: 80000,
@@ -48,28 +43,29 @@ func Register(
 	}
 
 	if err := userActRepo.Start(); err != nil {
-		l.Error("event-tracking: start userActBatch: %w", err)
+		facade.Log().Error("event-tracking: start userActBatch: %w", err)
 
 		return func() {}
 	}
-
-	userActChan := (*msgBus)["userActivityOnItem"]
 
 	// TODO: separate the code below to route, usecase file
 	handler.POST("/v1/tracking/user-activities", func(c echo.Context) error {
 		accountID, _ := middleware.GetAccountIDFromJWT(c)
 		uaString := c.Request().Header.Get("User-Agent")
 		var userAgent cm_entity.UserAgent
+		hasUserAgentInCache := false
 
-		data, found := cache.Get(uaString)
+		data, found := facade.Cache().Get(uaString)
 
 		if found {
-			userAgent = data.(cm_entity.UserAgent)
-		} else {
+			userAgent, hasUserAgentInCache = data.(cm_entity.UserAgent)
+		}
+
+		if !hasUserAgentInCache {
 			ua := useragent.Parse(uaString)
 			userAgent.From(ua)
-			cache.Set(uaString, userAgent, 100)
-			cache.Wait()
+			facade.Cache().Set(uaString, userAgent, 100)
+			facade.Cache().Wait()
 		}
 
 		dto := new(entity.CreateUserActivityDTO[any])
@@ -103,7 +99,15 @@ func Register(
 					return
 				}
 
-				userActChan <- string(data)
+				if err := facade.MsgBus().Publish("feedback-item", data, nil); err != nil {
+					facade.Log().Info("publish 'feedback-item' %s error %w", data, err)
+				}
+
+				if userActivity.UserID != "0" && userActivity.EventName == "read" {
+					if err := facade.MsgBus().Publish("room.watched", data, nil); err != nil {
+						facade.Log().Info("publish 'room.watched' %s error %w", data, err)
+					}
+				}
 			}()
 		}
 
@@ -117,7 +121,7 @@ func Register(
 
 	return func() {
 		if err := userActRepo.Stop(); err != nil {
-			l.Error("stop userActMuster: %w", err)
+			facade.Log().Error("stop userActMuster: %w", err)
 		}
 	}
 }

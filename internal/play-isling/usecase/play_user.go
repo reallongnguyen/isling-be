@@ -3,8 +3,6 @@ package usecase
 import (
 	"context"
 	common_entity "isling-be/internal/common/entity"
-
-	"golang.org/x/exp/slices"
 )
 
 type PlayUser struct {
@@ -20,22 +18,5 @@ func NewPlayUserUC(repo PlayUserRepository) PlayUserUsecase {
 }
 
 func (uc *PlayUser) InsertRecentlyJoinedRoom(c context.Context, accountID common_entity.AccountID, roomID int64) error {
-	playUser, err := uc.repo.GetOne(c, accountID)
-	if err != nil {
-		return err
-	}
-
-	recentlyJoinedRooms := playUser.RecentlyJoinedRooms
-	recentlyJoinedRooms = slices.DeleteFunc(recentlyJoinedRooms, func(a int64) bool {
-		return a == roomID
-	})
-	recentlyJoinedRooms = append([]int64{roomID}, recentlyJoinedRooms...)
-
-	playUser.RecentlyJoinedRooms = recentlyJoinedRooms
-
-	if len(recentlyJoinedRooms) > 8 {
-		playUser.RecentlyJoinedRooms = recentlyJoinedRooms[:8]
-	}
-
-	return uc.repo.Update(c, accountID, playUser)
+	return uc.repo.InsertRecentlyJoinedRoom(c, accountID, roomID)
 }

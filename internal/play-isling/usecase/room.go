@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	common_entity "isling-be/internal/common/entity"
 	"isling-be/internal/play-isling/entity"
+	"isling-be/pkg/facade"
 	"strings"
 
 	"github.com/gosimple/slug"
@@ -14,7 +15,6 @@ import (
 type (
 	RoomUC struct {
 		roomRepo RoomRepository
-		msgBus   *map[string]chan string
 	}
 )
 
@@ -26,10 +26,9 @@ const (
 
 var _ RoomUsecase = (*RoomUC)(nil)
 
-func NewRoomUsecase(roomRepo RoomRepository, msgBus *map[string]chan string) *RoomUC {
+func NewRoomUsecase(roomRepo RoomRepository) *RoomUC {
 	return &RoomUC{
 		roomRepo: roomRepo,
-		msgBus:   msgBus,
 	}
 }
 
@@ -60,24 +59,6 @@ func (uc *RoomUC) CreateRoom(c context.Context, accountID common_entity.AccountI
 	if err != nil {
 		return nil, err
 	}
-
-	go func() {
-		if uc.msgBus == nil {
-			return
-		}
-
-		roomCreatedChan, ok := (*uc.msgBus)["roomCreated"]
-		if !ok {
-			return
-		}
-
-		roomJSON, err := json.Marshal(newRoom)
-		if err != nil {
-			return
-		}
-
-		roomCreatedChan <- string(roomJSON)
-	}()
 
 	return newRoom, nil
 }
@@ -136,6 +117,8 @@ func (uc *RoomUC) DeleteRoom(c context.Context, currentUserID common_entity.Acco
 		return err
 	}
 
+	facade.Log().Debug("room %v", room)
+
 	if room.OwnerID != currentUserID {
 		return entity.ErrMissingDeletePerm
 	}
@@ -146,21 +129,15 @@ func (uc *RoomUC) DeleteRoom(c context.Context, currentUserID common_entity.Acco
 	}
 
 	go func() {
-		if uc.msgBus == nil {
-			return
-		}
-
-		roomDeletedChan, ok := (*uc.msgBus)["roomDeleted"]
-		if !ok {
-			return
-		}
-
 		roomJSON, err := json.Marshal(room)
 		if err != nil {
 			return
 		}
 
-		roomDeletedChan <- string(roomJSON)
+		err = facade.MsgBus().Publish("room.deleted", roomJSON, nil)
+		if err != nil {
+			facade.Log().Info("publish %s error: %w", roomJSON, err)
+		}
 	}()
 
 	return nil

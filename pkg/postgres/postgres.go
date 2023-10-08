@@ -7,7 +7,6 @@ import (
 	"isling-be/pkg/logger"
 	"time"
 
-	"github.com/jackc/pgx/v4"
 	"github.com/jackc/pgx/v4/pgxpool"
 )
 
@@ -16,19 +15,6 @@ const (
 	_defaultConnAttempts = 10
 	_defaultConnTimeout  = time.Second
 )
-
-type Logger struct {
-	logger.Interface
-}
-
-func (r *Logger) Log(_ context.Context, _ pgx.LogLevel, _ string, data map[string]interface{}) {
-	sql, ok := data["sql"]
-	if !ok {
-		return
-	}
-
-	r.Debug(sql)
-}
 
 // Postgres -.
 type Postgres struct {

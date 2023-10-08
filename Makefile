@@ -10,7 +10,7 @@ help: ## Display this help screen
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
 compose-up: ### Run docker-compose
-	docker-compose up --build -d postgres redis worker server master surrealdb
+	docker-compose up --build -d postgres redis worker server master surrealdb prometheus
 .PHONY: compose-up
 
 compose-up-integration-test: ### Run docker-compose with integration test
@@ -35,7 +35,7 @@ run:
 .PHONY: run
 
 docker-rm-volume: ### remove docker volume
-	docker volume rm isling-be_pg-data isling-be_worker_data isling-be_server_data isling-be_master_data isling-be_gorse_log isling-be_surreal_data
+	docker volume rm isling-be_pg-data isling-be_worker_data isling-be_server_data isling-be_master_data isling-be_gorse_log isling-be_surreal_data isling-be_prometheus-data
 .PHONY: docker-rm-volume
 
 linter-golangci: ### check by golangci linter

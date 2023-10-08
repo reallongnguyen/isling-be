@@ -2,7 +2,6 @@
 package app
 
 import (
-	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
@@ -20,12 +19,13 @@ import (
 
 // Run creates objects via constructors.
 func Run(cfg *config.Config) {
-	l := logger.New(cfg.Log.Level)
+	logPrettier := cfg.App.ENV == "development"
+	l := logger.New(cfg.Log.Level, logPrettier)
 
 	// Repository
 	pg, err := postgres.New(cfg.PG.URL, l, postgres.MaxPoolSize(cfg.PG.PoolMax))
 	if err != nil {
-		l.Fatal(fmt.Errorf("app - Run - postgres.New: %w", err))
+		l.Fatal("app - Run - postgres.New: %v", err)
 	}
 	defer pg.Close()
 
@@ -37,7 +37,7 @@ func Run(cfg *config.Config) {
 		cfg.Surreal.Password,
 	)
 	if err != nil {
-		l.Fatal(fmt.Errorf("app - Run - surreal.New: %w", err))
+		l.Fatal("app - Run - surreal.New: %v", err)
 	}
 	defer sur.Close()
 
@@ -48,23 +48,8 @@ func Run(cfg *config.Config) {
 		BufferItems: 64,
 	})
 	if err != nil {
-		l.Fatal("app - Run - cache.New: %w", err)
+		l.Fatal("app - Run - cache.New: %v", err)
 	}
-
-	// Msg bus
-	msgBus := make(map[string]chan string)
-
-	msgBus["accountCreated"] = make(chan string)
-	defer close(msgBus["accountCreated"])
-
-	msgBus["roomCreated"] = make(chan string)
-	defer close(msgBus["accountCreated"])
-
-	msgBus["roomDeleted"] = make(chan string)
-	defer close(msgBus["roomDeleted"])
-
-	msgBus["userActivityOnItem"] = make(chan string)
-	defer close(msgBus["userActivityOnItem"])
 
 	// Setup facade
 	facade.Setup(l, cfg, cache)
@@ -72,7 +57,7 @@ func Run(cfg *config.Config) {
 	// HTTP Server
 	handler := echo.New()
 	configHTTPServer(cfg, handler)
-	stopModules := useModules(l, cache, cfg, handler, pg, sur, &msgBus)
+	stopModules := useModules(handler, pg, sur)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
 	// Waiting signal
@@ -85,7 +70,7 @@ func Run(cfg *config.Config) {
 	case s := <-interrupt:
 		l.Info("app - Run - signal: " + s.String())
 	case err = <-httpServer.Notify():
-		l.Error(fmt.Errorf("app - Run - httpServer.Notify: %w", err))
+		l.Error("app - Run - httpServer.Notify: %v", err)
 	}
 
 	// Shutdown
@@ -93,6 +78,6 @@ func Run(cfg *config.Config) {
 
 	err = httpServer.Shutdown()
 	if err != nil {
-		l.Error(fmt.Errorf("app - Run - httpServer.Shutdown: %w", err))
+		l.Error("app - Run - httpServer.Shutdown: %v", err)
 	}
 }

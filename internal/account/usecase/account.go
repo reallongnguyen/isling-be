@@ -15,16 +15,14 @@ import (
 )
 
 type AccountUC struct {
-	repo   AccountRepository
-	msgBus *map[string]chan string
+	repo AccountRepository
 }
 
 var _ AccountUsecase = (*AccountUC)(nil)
 
-func NewAccountUC(repo AccountRepository, msgBus *map[string]chan string) AccountUsecase {
+func NewAccountUC(repo AccountRepository) AccountUsecase {
 	return &AccountUC{
-		repo:   repo,
-		msgBus: msgBus,
+		repo: repo,
 	}
 }
 
@@ -60,21 +58,12 @@ func (uc *AccountUC) CreateAccount(ctx context.Context, createAccountReq request
 	}
 
 	go func() {
-		if uc.msgBus == nil {
-			return
-		}
-
-		accountCreatedChan, ok := (*uc.msgBus)["accountCreated"]
-		if !ok {
-			return
-		}
-
 		accJSON, err := json.Marshal(account)
 		if err != nil {
 			return
 		}
 
-		accountCreatedChan <- string(accJSON)
+		facade.MsgBus().Publish("account.created", accJSON, nil)
 	}()
 
 	return account, nil

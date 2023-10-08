@@ -1,9 +1,8 @@
-package room_audience
+package worker
 
 import (
 	"fmt"
-	"isling-be/internal/tool/model"
-	"isling-be/pkg/logger"
+	"isling-be/pkg/facade"
 	"isling-be/pkg/surreal"
 	"strings"
 	"time"
@@ -11,28 +10,24 @@ import (
 	"github.com/surrealdb/surrealdb.go"
 )
 
-type RoomAudience struct {
-	sr  *surreal.Surreal
-	log logger.Interface
+type RoomAudCounter struct {
+	sr *surreal.Surreal
 }
 
-var _ model.Tool = (*RoomAudience)(nil)
-
-func NewRoomAudience(log logger.Interface, sr *surreal.Surreal) *RoomAudience {
-	return &RoomAudience{
-		sr:  sr,
-		log: log,
+func NewRoomAudCounter(sr *surreal.Surreal) *RoomAudCounter {
+	return &RoomAudCounter{
+		sr: sr,
 	}
 }
 
-func (r *RoomAudience) Start() error {
+func (r *RoomAudCounter) Run() {
 	go func() {
 		for {
-			r.log.Debug("RoomAudience: start delete zombie row in join table")
+			facade.Log().Debug("RoomAudience: start delete zombie row in join table")
 
 			_, err := r.sr.Query("DELETE join WHERE time::now() - time.pinged >= 120s", map[string]string{})
 			if err != nil {
-				r.log.Error("RoomAudience: delete zombie row in join table: %w", err)
+				facade.Log().Error("RoomAudience: delete zombie row in join table: %w", err)
 			}
 
 			time.Sleep(60 * time.Second)
@@ -51,11 +46,11 @@ func (r *RoomAudience) Start() error {
 				time.Sleep(60 * time.Second)
 			}
 
-			r.log.Debug("RoomAudience: start calculate audience")
+			facade.Log().Debug("RoomAudience: start calculate audience")
 
 			rawRes, err := r.sr.Query("SELECT count(in), out FROM join GROUP BY out", map[string]string{})
 			if err != nil {
-				r.log.Error("RoomAudience: calculate audience: %w", err)
+				facade.Log().Error("RoomAudience: calculate audience: %w", err)
 
 				continue
 			}
@@ -65,7 +60,7 @@ func (r *RoomAudience) Start() error {
 				Out   string `json:"out"`
 			}](rawRes, err)
 			if err != nil {
-				r.log.Error("RoomAudience: calculate audience: %w", err)
+				facade.Log().Error("RoomAudience: calculate audience: %w", err)
 
 				continue
 			}
@@ -96,10 +91,8 @@ func (r *RoomAudience) Start() error {
 				"idList": roomIDList,
 			})
 			if err != nil {
-				r.log.Error("RoomAudience: update audience count: %w", err)
+				facade.Log().Error("RoomAudience: update audience count: %w", err)
 			}
 		}
 	}()
-
-	return nil
 }

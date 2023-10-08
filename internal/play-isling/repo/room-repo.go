@@ -181,7 +181,7 @@ func (repo *RoomRepo) FindOne(c context.Context, id int64) (*entity.Room, error)
 			mr.updated_at
 		FROM media_rooms mr
 			LEFT JOIN profiles p ON (mr.owner_id = p.account_id)
-		WHERE id = $1
+		WHERE mr.id = $1
 	`
 
 	row := repo.Pool.QueryRow(c, sql, id)
