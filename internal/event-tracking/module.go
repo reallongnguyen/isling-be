@@ -19,7 +19,7 @@ import (
 	"golang.org/x/exp/slices"
 )
 
-var eventOnItems = []string{
+var recommendEventList = []string{
 	"read",
 	"comment",
 	"like",
@@ -84,7 +84,7 @@ func Register(
 			Timestamp: time.Now(),
 		}
 
-		if slices.Contains(eventOnItems, userActivity.EventName) {
+		if userActivity.UserID != "0" && slices.Contains(recommendEventList, userActivity.EventName) {
 			byteOfData, _ := json.Marshal(userActivity.Data)
 			actOnItemData := new(entity.ActOnItemData)
 			if err := json.Unmarshal(byteOfData, actOnItemData); err != nil {
@@ -99,12 +99,12 @@ func Register(
 					return
 				}
 
-				if err := facade.MsgBus().Publish("feedback-item", data, nil); err != nil {
-					facade.Log().Info("publish 'feedback-item' %s error %w", data, err)
+				if err := facade.Pubsub().Publish("recommend.feedback", data, nil); err != nil {
+					facade.Log().Info("publish 'recommend.feedback' %s error %w", data, err)
 				}
 
-				if userActivity.UserID != "0" && userActivity.EventName == "read" {
-					if err := facade.MsgBus().Publish("room.watched", data, nil); err != nil {
+				if userActivity.EventName == "read" {
+					if err := facade.Pubsub().Publish("room.watched", data, nil); err != nil {
 						facade.Log().Info("publish 'room.watched' %s error %w", data, err)
 					}
 				}

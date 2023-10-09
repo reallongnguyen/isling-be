@@ -53,7 +53,7 @@ func (r *WatchAgainUpdater) Run() {
 		return nil
 	}
 
-	if err := facade.MsgBus().Subscribe("room.watched", insertFeedback); err != nil {
+	if err := facade.Pubsub().Subscribe("room.watched", insertFeedback); err != nil {
 		facade.Log().Error("subscribe 'room.watched': %w", err)
 	}
 }

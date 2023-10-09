@@ -31,7 +31,6 @@ func Register(handler *echo.Echo, pg *postgres.Postgres, sur *surreal.Surreal) f
 
 	roomRouter := v1.NewRoomRouter(roomUC)
 	homeRouter := v1.NewHomeRouter(homeUC)
-	trackingRouter := v1.NewTrackingRouter(recommendationUC, playUserUC)
 
 	{
 		protectedRoutes.POST("/play-isling/v1/rooms", roomRouter.Create)
@@ -42,8 +41,6 @@ func Register(handler *echo.Echo, pg *postgres.Postgres, sur *surreal.Surreal) f
 
 		protectedRoutes.GET("/play-isling/v1/home", homeRouter.Show)
 		handler.GET("/play-isling/v1/guest/home", homeRouter.ShowGuest)
-
-		protectedRoutes.POST("/play-isling/v1/actions", trackingRouter.Create)
 	}
 
 	gorseETLWorker := worker.NewGorseETL(recommendationUC)
@@ -55,7 +52,7 @@ func Register(handler *echo.Echo, pg *postgres.Postgres, sur *surreal.Surreal) f
 	watchAgainUpdater := worker.NewWatchAgainUpdater(playUserUC)
 	watchAgainUpdater.Run()
 
-	// TODO: move to worker
+	// TODO: move to /controller/worker
 	go func() {
 		handler := func(uuid string, payload []byte, metadata map[string]string) error {
 			account := new(acc_entity.Account)
@@ -77,13 +74,13 @@ func Register(handler *echo.Echo, pg *postgres.Postgres, sur *surreal.Surreal) f
 			return nil
 		}
 
-		err := facade.MsgBus().Subscribe("account.created", handler)
+		err := facade.Pubsub().Subscribe("account.created", handler)
 		if err != nil {
 			facade.Log().Error("subscribe topic 'account.created' error %w", err)
 		}
 	}()
 
-	// TODO: move to worker
+	// TODO: move to /controller/worker
 	go func() {
 		handler := func(uuid string, payload []byte, metadata map[string]string) error {
 			room := new(entity.Room)
@@ -103,7 +100,7 @@ func Register(handler *echo.Echo, pg *postgres.Postgres, sur *surreal.Surreal) f
 			return nil
 		}
 
-		err := facade.MsgBus().Subscribe("room.deleted", handler)
+		err := facade.Pubsub().Subscribe("room.deleted", handler)
 		if err != nil {
 			facade.Log().Error("subscribe topic 'room.deleted' error %w", err)
 		}

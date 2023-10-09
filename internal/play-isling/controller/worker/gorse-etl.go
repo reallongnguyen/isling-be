@@ -41,7 +41,7 @@ func (r *GorseETL) Run() {
 		return r.recommendationUC.InsertFeedback(context.Background(), feedback)
 	}
 
-	if err := facade.MsgBus().Subscribe("feedback-item", insertFeedback); err != nil {
-		facade.Log().Error("subscribe 'feedback-item': %w", err)
+	if err := facade.Pubsub().Subscribe("recommend.feedback", insertFeedback); err != nil {
+		facade.Log().Error("subscribe 'recommend.feedback': %w", err)
 	}
 }

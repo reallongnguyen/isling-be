@@ -63,7 +63,7 @@ func (uc *AccountUC) CreateAccount(ctx context.Context, createAccountReq request
 			return
 		}
 
-		facade.MsgBus().Publish("account.created", accJSON, nil)
+		facade.Pubsub().Publish("account.created", accJSON, nil)
 	}()
 
 	return account, nil

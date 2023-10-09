@@ -46,6 +46,6 @@ func Cache() *ristretto.Cache {
 	return pool.cache
 }
 
-func MsgBus() *watermill.Watermill {
+func Pubsub() *watermill.Watermill {
 	return pool.messageBus
 }

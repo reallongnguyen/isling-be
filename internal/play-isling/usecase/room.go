@@ -134,7 +134,7 @@ func (uc *RoomUC) DeleteRoom(c context.Context, currentUserID common_entity.Acco
 			return
 		}
 
-		err = facade.MsgBus().Publish("room.deleted", roomJSON, nil)
+		err = facade.Pubsub().Publish("room.deleted", roomJSON, nil)
 		if err != nil {
 			facade.Log().Info("publish %s error: %w", roomJSON, err)
 		}
