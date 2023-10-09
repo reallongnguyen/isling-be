@@ -3,10 +3,11 @@ package pg_surreal_sync
 import (
 	"context"
 	"encoding/json"
-	"isling-be/internal/tool/model"
+	"isling-be/internal/tool/entity"
 	"isling-be/pkg/facade"
 	"isling-be/pkg/postgres"
 	"isling-be/pkg/surreal"
+	"time"
 )
 
 type PGSurrealSync struct {
@@ -14,7 +15,7 @@ type PGSurrealSync struct {
 	sr *surreal.Surreal
 }
 
-var _ model.Tool = (*PGSurrealSync)(nil)
+var _ entity.Tool = (*PGSurrealSync)(nil)
 
 func NewPGSurrealSync(pg *postgres.Postgres, sr *surreal.Surreal) *PGSurrealSync {
 	return &PGSurrealSync{
@@ -23,7 +24,17 @@ func NewPGSurrealSync(pg *postgres.Postgres, sr *surreal.Surreal) *PGSurrealSync
 	}
 }
 
-func (r *PGSurrealSync) Start() error {
+func (r *PGSurrealSync) Start() {
+	go func() {
+		for {
+			r.Sync()
+
+			time.Sleep(time.Second)
+		}
+	}()
+}
+
+func (r *PGSurrealSync) Sync() error {
 	conn, err := r.pg.Pool.Acquire(context.Background())
 	if err != nil {
 		facade.Log().Error("PGsurrealSync: acquire connection: %w", err)
@@ -42,12 +53,14 @@ func (r *PGSurrealSync) Start() error {
 
 	syncDataUC := NewSyncDataUsecase(r.sr)
 
+	facade.Log().Info("PGsurrealSync: start listen postgres then sync to surreal")
+
 	for {
 		noti, err := conn.Conn().WaitForNotification(context.Background())
 		if err != nil {
 			facade.Log().Error("PGsurrealSync: wait notification: %w", err)
 
-			continue
+			return err
 		}
 
 		payload := new(Payload)
@@ -55,6 +68,8 @@ func (r *PGSurrealSync) Start() error {
 		if err = json.Unmarshal([]byte(noti.Payload), payload); err != nil {
 			continue
 		}
+
+		facade.Log().Trace("PGsurrealSync: receive msg: %v", *payload)
 
 		err = syncDataUC.Handle(payload)
 		if err != nil {

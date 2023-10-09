@@ -19,8 +19,6 @@ func NewSyncDataUsecase(sr *surreal.Surreal) *SyncDataUsecase {
 }
 
 func (r *SyncDataUsecase) Handle(payload *Payload) error {
-	facade.Log().Debug("pg_surreal_sync: receive msg: %w", *payload)
-
 	switch payload.Table {
 	case "profiles":
 		profile := new(Profile)

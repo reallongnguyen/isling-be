@@ -1,7 +1,7 @@
 package app
 
 import (
-	"isling-be/config"
+	"isling-be/pkg/facade"
 	"net/http"
 
 	"github.com/go-playground/validator/v10"
@@ -9,6 +9,7 @@ import (
 	"github.com/labstack/echo/v4"
 	"github.com/labstack/echo/v4/middleware"
 	echo_swagger "github.com/swaggo/echo-swagger"
+	"golang.org/x/time/rate"
 )
 
 type CustomValidator struct {
@@ -37,15 +38,21 @@ func NewCustomValidator() *CustomValidator {
 
 // @host https://api.isling.me
 // @BasePath /v1.
-func configHTTPServer(config *config.Config, handler *echo.Echo) {
-	if config.App.ENV != "development" {
-		handler.Use(middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(1024)))
+func configHTTPServer(handler *echo.Echo) {
+	if facade.Config().App.ENV != "development" {
+		limit := rate.Limit(facade.Config().HTTP.RateLimit)
+
+		handler.Use(
+			middleware.RateLimiter(
+				middleware.NewRateLimiterMemoryStore(limit),
+			),
+		)
 	}
 
 	handler.Use(middleware.Logger())
 	handler.Use(middleware.Recover())
 	handler.Use(middleware.CORS())
-	handler.Use(echoprometheus.NewMiddleware(config.App.Name))
+	handler.Use(echoprometheus.NewMiddleware(facade.Config().App.Name))
 	handler.Use(middleware.Secure())
 	handler.Validator = NewCustomValidator()
 

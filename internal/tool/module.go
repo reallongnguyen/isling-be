@@ -9,7 +9,5 @@ import (
 func Register(pg *postgres.Postgres, sr *surreal.Surreal) {
 	pgSurrealSync := pg_surreal_sync.NewPGSurrealSync(pg, sr)
 
-	go func() {
-		pgSurrealSync.Start()
-	}()
+	pgSurrealSync.Start()
 }

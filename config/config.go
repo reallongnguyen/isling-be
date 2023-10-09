@@ -25,7 +25,8 @@ type (
 
 	// HTTP -.
 	HTTP struct {
-		Port string `env-required:"true" yaml:"port" env:"HTTP_PORT"`
+		Port      string `env-required:"true" yaml:"port" env:"HTTP_PORT"`
+		RateLimit int    `env-required:"true" yaml:"rate_limit" env:"HTTP_RATE_LIMIT"`
 	}
 
 	// Log -.

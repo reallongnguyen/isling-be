@@ -5,6 +5,7 @@ app:
 
 http:
   port: '8080'
+  rate_limit: 1024
 
 logger:
   log_level: 'info'

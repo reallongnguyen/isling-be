@@ -35,6 +35,7 @@ func Run(cfg *config.Config) {
 		cfg.Surreal.DB,
 		cfg.Surreal.User,
 		cfg.Surreal.Password,
+		l,
 	)
 	if err != nil {
 		l.Fatal("app - Run - surreal.New: %v", err)
@@ -56,7 +57,7 @@ func Run(cfg *config.Config) {
 
 	// HTTP Server
 	handler := echo.New()
-	configHTTPServer(cfg, handler)
+	configHTTPServer(handler)
 	stopModules := useModules(handler, pg, sur)
 	httpServer := httpserver.New(handler, httpserver.Port(cfg.HTTP.Port))
 
