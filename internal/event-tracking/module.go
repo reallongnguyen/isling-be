@@ -3,7 +3,7 @@ package eventtracking
 import (
 	"encoding/json"
 	appresponse "isling-be/internal/common/controller/http"
-	"isling-be/internal/common/controller/http/middleware"
+	mymiddleware "isling-be/internal/common/controller/http/middleware"
 	cm_entity "isling-be/internal/common/entity"
 	"isling-be/internal/event-tracking/entity"
 	"isling-be/internal/event-tracking/repo"
@@ -15,8 +15,10 @@ import (
 	"time"
 
 	"github.com/labstack/echo/v4"
+	"github.com/labstack/echo/v4/middleware"
 	"github.com/mileusna/useragent"
 	"golang.org/x/exp/slices"
+	"golang.org/x/time/rate"
 )
 
 var recommendEventList = []string{
@@ -35,22 +37,29 @@ func Register(
 	handler *echo.Echo,
 	sur *surreal.Surreal,
 ) func() {
-	userActRepo := usecase.UserActBatch{
+	userActBatchUC := usecase.UserActBatch{
 		MaxBatchSize:        10000,
 		BatchTimeout:        2 * time.Second,
 		PendingWorkCapacity: 80000,
 		UserActRepo:         repo.NewUserActSurRepo(sur),
 	}
 
-	if err := userActRepo.Start(); err != nil {
+	if err := userActBatchUC.Start(); err != nil {
 		facade.Log().Error("event-tracking: start userActBatch: %w", err)
 
 		return func() {}
 	}
 
+	rateLimit := rate.Limit(facade.Config().HTTP.RateLimitUserActivitiesPost)
+
+	middlewares := []echo.MiddlewareFunc{
+		middleware.RateLimiter(middleware.NewRateLimiterMemoryStore(rateLimit)),
+		mymiddleware.ParseJWT(),
+	}
+
 	// TODO: separate the code below to route, usecase file
 	handler.POST("/v1/tracking/user-activities", func(c echo.Context) error {
-		accountID, _ := middleware.GetAccountIDFromJWT(c)
+		accountID, _ := mymiddleware.GetAccountIDFromJWT(c)
 		uaString := c.Request().Header.Get("User-Agent")
 		var userAgent cm_entity.UserAgent
 		hasUserAgentInCache := false
@@ -111,16 +120,16 @@ func Register(
 			}()
 		}
 
-		err := userActRepo.Add(userActivity)
+		err := userActBatchUC.Add(userActivity)
 		if err != nil {
 			return appresponse.ResponseError(c, err)
 		}
 
 		return appresponse.ResponseSuccess(c, true)
-	}, middleware.ParseJWT())
+	}, middlewares...)
 
 	return func() {
-		if err := userActRepo.Stop(); err != nil {
+		if err := userActBatchUC.Stop(); err != nil {
 			facade.Log().Error("stop userActMuster: %w", err)
 		}
 	}

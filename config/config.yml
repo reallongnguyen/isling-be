@@ -5,7 +5,8 @@ app:
 
 http:
   port: '8080'
-  rate_limit: 1024
+  rate_limit: 64
+  rate_limit_user_activities_post: 4
 
 logger:
   log_level: 'info'

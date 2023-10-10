@@ -1,12 +1,15 @@
-// HTTP_PORT=8080 ENDPOINT=stress-test k6 run --vus 100 --iterations 100000 stress-test/empty-get.js
+// ENDPOINT=stress-test k6 run --vus 100 --iterations 100000 stress-test/empty-get.js
 
 import http from 'k6/http';
 
 import { check } from 'k6';
 
+const host = __ENV.HTTP_HOST || 'http://localhost';
+const post = __ENV.HTTP_PORT || '8080';
+
 export default function () {
   let res = http.get(
-    `http://localhost:${__ENV.HTTP_PORT}/${__ENV.ENDPOINT}`,
+    `${host}:${post}/${__ENV.ENDPOINT}`,
     undefined,
     { headers: { 'Content-Type': 'application/json' } }
   );

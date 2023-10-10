@@ -39,15 +39,13 @@ func NewCustomValidator() *CustomValidator {
 // @host https://api.isling.me
 // @BasePath /v1.
 func configHTTPServer(handler *echo.Echo) {
-	if facade.Config().App.ENV != "development" {
-		limit := rate.Limit(facade.Config().HTTP.RateLimit)
+	limit := rate.Limit(facade.Config().HTTP.RateLimit)
 
-		handler.Use(
-			middleware.RateLimiter(
-				middleware.NewRateLimiterMemoryStore(limit),
-			),
-		)
-	}
+	handler.Use(
+		middleware.RateLimiter(
+			middleware.NewRateLimiterMemoryStore(limit),
+		),
+	)
 
 	handler.Use(middleware.Logger())
 	handler.Use(middleware.Recover())
