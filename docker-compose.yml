@@ -1,7 +1,7 @@
 version: '3.9'
 services:
   postgres:
-    container_name: postgres-isling
+    container_name: postgres
     image: postgres
     volumes:
       - pg-data:/var/lib/postgresql/data
@@ -13,6 +13,7 @@ services:
       - 5432:5432
 
   surrealdb:
+    container_name: surrealdb
     user: root
     image: surrealdb/surrealdb:latest
     command: start --log debug --auth --user ${SURREAL_USER} --pass ${SURREAL_PASS} file:/data/surreal.db
@@ -22,15 +23,18 @@ services:
       - 8000:8000
 
   redis:
-    container_name: redis-isling
+    container_name: redis
     image: redis/redis-stack
     restart: unless-stopped
     ports:
       - 6379:6379
-    environment:
-      REDIS_ARGS: --requirepass ${REDIS_PASSWORD}
+    # environment:
+    #   REDIS_ARGS: --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
 
   worker:
+    container_name: gorse-worker
     image: zhenghaoz/gorse-worker
     restart: unless-stopped
     ports:
@@ -47,6 +51,7 @@ services:
       - master
 
   server:
+    container_name: gorse-server
     image: zhenghaoz/gorse-server
     restart: unless-stopped
     ports:
@@ -63,13 +68,14 @@ services:
       - master
 
   master:
+    container_name: gorse-master
     image: zhenghaoz/gorse-master
     restart: unless-stopped
     ports:
       - 8086:8086
       - 8088:8088
     environment:
-      GORSE_CACHE_STORE: redis://default:${REDIS_PASSWORD}@redis:6379
+      GORSE_CACHE_STORE: redis://redis:6379
       GORSE_DATA_STORE: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${GORSE_DB}?sslmode=disable
       GORSE_DASHBOARD_USER_NAME: ${GORSE_DASHBOARD_USER_NAME}
       GORSE_DASHBOARD_PASSWORD: ${GORSE_DASHBOARD_PASSWORD}
@@ -133,3 +139,4 @@ volumes:
   gorse_log:
   surreal_data:
   prometheus-data:
+  redis-data:
