@@ -23,14 +23,17 @@ func Register(handler *echo.Echo, pg *postgres.Postgres, sur *surreal.Surreal) f
 
 	roomRepo := repo.NewRoomRepo(pg)
 	playUserRepo := repo.NewPlayUserRepo(pg)
+	searchRepo := repo.NewSearchRepo(sur)
 
 	roomUC := usecase.NewRoomUsecase(roomRepo)
 	homeUC := usecase.NewHomeUsecase(playUserRepo, roomRepo)
 	recommendationUC := usecase.NewRecommendationUC()
 	playUserUC := usecase.NewPlayUserUC(playUserRepo)
+	searchUC := usecase.NewSearchUC(searchRepo)
 
 	roomRouter := v1.NewRoomRouter(roomUC)
 	homeRouter := v1.NewHomeRouter(homeUC)
+	searchRouter := v1.NewSearchRouter(searchUC)
 
 	{
 		protectedRoutes.POST("/play-isling/v1/rooms", roomRouter.Create)
@@ -41,6 +44,8 @@ func Register(handler *echo.Echo, pg *postgres.Postgres, sur *surreal.Surreal) f
 
 		protectedRoutes.GET("/play-isling/v1/home", homeRouter.Show)
 		handler.GET("/play-isling/v1/guest/home", homeRouter.ShowGuest)
+
+		protectedRoutes.GET("/play-isling/v1/search", searchRouter.Search)
 	}
 
 	gorseETLWorker := worker.NewGorseETL(recommendationUC)

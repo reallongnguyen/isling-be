@@ -59,4 +59,13 @@ type (
 		HideItem(c context.Context, itemID string) error
 		InsertFeedback(c context.Context, feedback client.Feedback) error
 	}
+
+	SearchRepository interface {
+		SearchRoom(c context.Context, accountID common_entity.AccountID, req *SearchRequest) ([]entity.RoomSearchResult, error)
+		GetTotalRoomMatches(c context.Context, accountID common_entity.AccountID, req *SearchRequest) (int, error)
+	}
+
+	SearchUsecase interface {
+		Search(c context.Context, accountID common_entity.AccountID, req *SearchRequest) (*SearchResponse, error)
+	}
 )

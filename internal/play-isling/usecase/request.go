@@ -38,3 +38,13 @@ type CreateActionRequest struct {
 	ObjectID  *string
 	Timestamp time.Time
 }
+
+type SearchRequest struct {
+	Query  string
+	Limit  int
+	Offset int
+}
+
+type SearchResponse struct {
+	Rooms *common_entity.Collection[entity.RoomSearchResult] `json:"rooms,omitempty"`
+}

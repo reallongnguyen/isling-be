@@ -43,6 +43,8 @@ func (r *RoomAudCounter) Run() {
 
 				time.Sleep(30 * time.Second)
 			} else {
+				// if you change the duration here,
+				// you must update the duration in internal/play-isling/repo/search_repo.go:29
 				time.Sleep(60 * time.Second)
 			}
 

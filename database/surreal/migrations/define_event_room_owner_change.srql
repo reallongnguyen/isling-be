@@ -17,3 +17,15 @@ THEN {
       []
     END;
 };
+
+DEFINE EVENT user_fullName_change ON TABLE users
+WHEN $event = 'CREATE' OR ($event = 'UPDATE' AND string::join(' ', $before.firstName, $before.lastName) != string::join(' ', $after.firstName, $after.lastName)) 
+THEN {
+    $fullName = string::trim(
+      string::join(' ', $after.firstName || '', $after.lastName || '')
+    );
+
+    UPDATE $after SET fullName = $fullName;
+
+    UPDATE $after->own->media_rooms SET ownerFullName = $fullName;
+};

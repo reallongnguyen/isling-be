@@ -1,6 +1,11 @@
 package entity
 
 type (
+	PaginationReq struct {
+		Offset int `json:"offset" example:"0"`
+		Limit  int `json:"limit" example:"1"`
+	}
+
 	Pagination struct {
 		Offset int `json:"offset" example:"0"`
 		Limit  int `json:"limit" example:"1"`
