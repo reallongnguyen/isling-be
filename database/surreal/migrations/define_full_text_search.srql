@@ -3,3 +3,5 @@ DEFINE ANALYZER ascii TOKENIZERS class FILTERS lowercase,ascii;
 DEFINE ANALYZER autocomplete FILTERS lowercase,ascii,edgengram(2,10);
 
 DEFINE INDEX ft_room_name ON media_rooms columns name SEARCH ANALYZER ascii BM25 HIGHLIGHTS;
+
+DEFINE INDEX ft_media_rooms_ownerFullName ON media_rooms columns ownerFullName SEARCH ANALYZER ascii BM25 HIGHLIGHTS;

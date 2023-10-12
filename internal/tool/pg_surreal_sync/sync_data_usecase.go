@@ -86,7 +86,11 @@ func (r *SyncDataUsecase) Handle(payload *Payload) error {
 			CreatedAt:   room.CreatedAt,
 		}
 
-		_, err := r.sr.Update(srRoom.ID, srRoom)
+		sql := `
+			UPDATE ` + srRoom.ID + ` MERGE $data
+		`
+
+		_, err := r.sr.Query(sql, map[string]interface{}{"data": srRoom})
 		if err != nil {
 			facade.Log().Error("SyncDataUsecase: update room: %w", err)
 		}

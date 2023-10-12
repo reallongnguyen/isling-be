@@ -25,7 +25,7 @@ func (r *RoomAudCounter) Run() {
 		for {
 			facade.Log().Debug("RoomAudience: start delete zombie row in join table")
 
-			_, err := r.sr.Query("DELETE join WHERE time::now() - time.pinged > 96s", map[string]string{})
+			_, err := r.sr.Query("DELETE join WHERE out = NONE OR time::now() - time.pinged > 96s", map[string]string{})
 			if err != nil {
 				facade.Log().Error("RoomAudience: delete zombie row in join table: %w", err)
 			}
@@ -51,7 +51,7 @@ func (r *RoomAudCounter) Run() {
 
 			facade.Log().Debug("RoomAudience: start calculate audience")
 
-			rawRes, err := r.sr.Query("SELECT count(in), out FROM join GROUP BY out", map[string]string{})
+			rawRes, err := r.sr.Query("SELECT count(in), out FROM join WHERE out != NONE GROUP BY out", map[string]string{})
 			if err != nil {
 				facade.Log().Error("RoomAudience: calculate audience: %w", err)
 
