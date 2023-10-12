@@ -57,7 +57,7 @@ func (repo *RoomRepo) Create(c context.Context, room *entity.Room) (*entity.Room
 	return room, nil
 }
 
-func (repo *RoomRepo) FindMany(c context.Context, filter *usecase.FindRoomFilter, order *usecase.Order) (*common_entity.Collection[*entity.Room], error) {
+func (repo *RoomRepo) FindMany(c context.Context, filter *usecase.FindRoomFilter, order *usecase.Order) (*common_entity.Collection[entity.Room], error) {
 	binds := make([]interface{}, 0, 0)
 	whereConditions := make([]string, 0, 0)
 
@@ -109,7 +109,7 @@ func (repo *RoomRepo) FindMany(c context.Context, filter *usecase.FindRoomFilter
 		ORDER BY ` + orderClause + `
 	`
 
-	rooms := make([]*entity.Room, 0, initialSliceCap)
+	rooms := make([]entity.Room, 0, initialSliceCap)
 
 	roomOwner := new(entity.RoomOwner)
 	room := entity.Room{Owner: roomOwner}
@@ -146,7 +146,7 @@ func (repo *RoomRepo) FindMany(c context.Context, filter *usecase.FindRoomFilter
 				newRoom.Owner = nil
 			}
 
-			rooms = append(rooms, &newRoom)
+			rooms = append(rooms, newRoom)
 
 			return nil
 		},

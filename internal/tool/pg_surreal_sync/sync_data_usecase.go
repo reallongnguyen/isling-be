@@ -75,6 +75,7 @@ func (r *SyncDataUsecase) Handle(payload *Payload) error {
 
 		srRoom := SRRoom{
 			ID:          srRoomID,
+			OriginalID:  room.ID,
 			OwnerID:     fmt.Sprintf("users:%d", room.OwnerID),
 			Visibility:  room.Visibility,
 			InviteCode:  room.InviteCode,
@@ -82,6 +83,7 @@ func (r *SyncDataUsecase) Handle(payload *Payload) error {
 			Slug:        room.Slug,
 			Description: room.Description,
 			Cover:       room.Cover,
+			CreatedAt:   room.CreatedAt,
 		}
 
 		_, err := r.sr.Update(srRoom.ID, srRoom)

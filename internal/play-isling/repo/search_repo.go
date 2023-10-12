@@ -26,7 +26,7 @@ func (r *SearchRepo) SearchRoom(_ context.Context, _ common_entity.AccountID, re
 			*,
 			ownerID AS owner,
 			(
-				IF audCountUpdatedAt AND time::now() - audCountUpdatedAt < 90s
+				IF audCountUpdatedAt AND time::now() - audCountUpdatedAt < 39s
 			  THEN audienceCount
 				ELSE 0
 				END

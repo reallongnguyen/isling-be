@@ -25,7 +25,7 @@ func (r *RoomAudCounter) Run() {
 		for {
 			facade.Log().Debug("RoomAudience: start delete zombie row in join table")
 
-			_, err := r.sr.Query("DELETE join WHERE time::now() - time.pinged >= 120s", map[string]string{})
+			_, err := r.sr.Query("DELETE join WHERE time::now() - time.pinged > 96s", map[string]string{})
 			if err != nil {
 				facade.Log().Error("RoomAudience: delete zombie row in join table: %w", err)
 			}
@@ -41,11 +41,12 @@ func (r *RoomAudCounter) Run() {
 			if isFirstRun {
 				isFirstRun = false
 
-				time.Sleep(30 * time.Second)
+				time.Sleep(10 * time.Second)
 			} else {
 				// if you change the duration here,
 				// you must update the duration in internal/play-isling/repo/search_repo.go:29
-				time.Sleep(60 * time.Second)
+				// and internal/play-isling/repo/room-surreal.go:92
+				time.Sleep(20 * time.Second)
 			}
 
 			facade.Log().Debug("RoomAudience: start calculate audience")

@@ -45,12 +45,14 @@ type SRUser struct {
 }
 
 type SRRoom struct {
-	ID          string `json:"id"`
-	OwnerID     string `json:"ownerID"`
-	Visibility  string `json:"visibility"`
-	InviteCode  string `json:"inviteCode"`
-	Name        string `json:"name"`
-	Slug        string `json:"slug"`
-	Description string `json:"description"`
-	Cover       string `json:"cover"`
+	ID          string    `json:"id"`
+	OriginalID  int64     `json:"originalID"`
+	OwnerID     string    `json:"ownerID"`
+	Visibility  string    `json:"visibility"`
+	InviteCode  string    `json:"inviteCode"`
+	Name        string    `json:"name"`
+	Slug        string    `json:"slug"`
+	Description string    `json:"description"`
+	Cover       string    `json:"cover"`
+	CreatedAt   time.Time `json:"created_at"`
 }

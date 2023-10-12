@@ -2,6 +2,8 @@ package entity
 
 import (
 	common_entity "isling-be/internal/common/entity"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -65,4 +67,49 @@ type RoomPublic struct {
 	Audiences     []common_entity.AccountID `json:"audiences"`
 	CreatedAt     time.Time                 `json:"createdAt"`
 	UpdatedAt     time.Time                 `json:"updatedAt"`
+}
+
+type RoomOwnerSurreal struct {
+	RoomOwner
+	ID       string `json:"id"`
+	FullName string `json:"fullName,omitempty"`
+}
+
+type RoomSurreal struct {
+	Room
+	ID         string            `json:"id"`
+	OriginalID int64             `json:"originalID"`
+	OwnerID    string            `json:"ownerID,omitempty"`
+	Owner      *RoomOwnerSurreal `json:"owner,omitempty"`
+}
+
+func (r *RoomSurreal) ToRoom() *Room {
+	ownerID, _ := strconv.Atoi(strings.Split(r.OwnerID, ":")[1])
+
+	var roomOwner *RoomOwner
+
+	if r.Owner != nil {
+		roomOwner = &RoomOwner{
+			ID:        common_entity.AccountID(ownerID),
+			FirstName: r.Owner.FirstName,
+			LastName:  r.Owner.LastName,
+			AvatarURL: r.Owner.AvatarURL,
+		}
+	}
+
+	return &Room{
+		ID:            r.OriginalID,
+		OwnerID:       common_entity.AccountID(ownerID),
+		Owner:         roomOwner,
+		Visibility:    r.Visibility,
+		InviteCode:    r.InviteCode,
+		Name:          r.Name,
+		Slug:          r.Slug,
+		Description:   r.Description,
+		Cover:         r.Cover,
+		AudienceCount: r.AudienceCount,
+		Audiences:     r.Audiences,
+		CreatedAt:     r.CreatedAt,
+		UpdatedAt:     r.UpdatedAt,
+	}
 }

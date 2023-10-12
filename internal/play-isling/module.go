@@ -22,11 +22,12 @@ func Register(handler *echo.Echo, pg *postgres.Postgres, sur *surreal.Surreal) f
 	protectedRoutes := handler.Group("", middleware.VerifyJWT())
 
 	roomRepo := repo.NewRoomRepo(pg)
+	roomRepoSurreal := repo.NewRoomRepoSurreal(sur, pg)
 	playUserRepo := repo.NewPlayUserRepo(pg)
 	searchRepo := repo.NewSearchRepo(sur)
 
 	roomUC := usecase.NewRoomUsecase(roomRepo)
-	homeUC := usecase.NewHomeUsecase(playUserRepo, roomRepo)
+	homeUC := usecase.NewHomeUsecase(playUserRepo, roomRepoSurreal)
 	recommendationUC := usecase.NewRecommendationUC()
 	playUserUC := usecase.NewPlayUserUC(playUserRepo)
 	searchUC := usecase.NewSearchUC(searchRepo)

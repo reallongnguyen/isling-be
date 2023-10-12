@@ -63,7 +63,7 @@ func (uc *RoomUC) CreateRoom(c context.Context, accountID common_entity.AccountI
 	return newRoom, nil
 }
 
-func (uc *RoomUC) GetManyRoomOfUser(c context.Context, accountID common_entity.AccountID) (*common_entity.Collection[*entity.Room], error) {
+func (uc *RoomUC) GetManyRoomOfUser(c context.Context, accountID common_entity.AccountID) (*common_entity.Collection[entity.Room], error) {
 	filter := FindRoomFilter{
 		OwnerID: &accountID,
 	}
