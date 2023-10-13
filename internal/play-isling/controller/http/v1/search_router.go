@@ -21,10 +21,7 @@ func NewSearchRouter(searchUC usecase.SearchUsecase) *SearchRouter {
 }
 
 func (r *SearchRouter) Search(c echo.Context) error {
-	accountID, err := common_mw.GetAccountIDFromJWT(c)
-	if err != nil {
-		return common_http.ResponseCustomError(c, http.StatusBadRequest, err.Error(), []error{err})
-	}
+	accountID, _ := common_mw.GetAccountIDFromJWT(c)
 
 	reqDTO := dto.SearchReqDTO{
 		Query:  c.QueryParam("query"),
@@ -32,7 +29,7 @@ func (r *SearchRouter) Search(c echo.Context) error {
 		Offset: c.QueryParam("offset"),
 	}
 
-	if err = c.Validate(reqDTO); err != nil {
+	if err := c.Validate(reqDTO); err != nil {
 		return common_http.ResponseCustomError(c, http.StatusBadRequest, "validation failed", []error{err})
 	}
 

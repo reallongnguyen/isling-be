@@ -46,7 +46,7 @@ func Register(handler *echo.Echo, pg *postgres.Postgres, sur *surreal.Surreal) f
 		protectedRoutes.GET("/play-isling/v1/home", homeRouter.Show)
 		handler.GET("/play-isling/v1/guest/home", homeRouter.ShowGuest)
 
-		protectedRoutes.GET("/play-isling/v1/search", searchRouter.Search)
+		handler.GET("/play-isling/v1/search", searchRouter.Search, middleware.ParseJWT())
 	}
 
 	gorseETLWorker := worker.NewGorseETL(recommendationUC)
