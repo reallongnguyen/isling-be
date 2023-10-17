@@ -5,6 +5,7 @@ import (
 )
 
 type UserActivity[T any] struct {
+	ID        string    `json:"id"`
 	UserID    string    `json:"userId,omitempty"`
 	EventName string    `json:"eventName"`
 	Data      T         `json:"data"`
@@ -12,6 +13,8 @@ type UserActivity[T any] struct {
 	OS        string    `json:"os,omitempty"`     // Windows, Android, iOS etc.
 	App       string    `json:"app,omitempty"`    // play
 	Timestamp time.Time `json:"timestamp"`
+	IP        string    `json:"ip,omitempty"`
+	GuestID   string    `json:"guestId,omitempty"`
 }
 
 type CreateUserActivityDTO[T any] struct {

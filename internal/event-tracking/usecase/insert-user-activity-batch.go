@@ -2,10 +2,10 @@ package usecase
 
 import (
 	"isling-be/internal/event-tracking/entity"
+	"isling-be/pkg/facade"
 	"time"
 
 	"github.com/facebookgo/muster"
-	"github.com/gookit/color"
 )
 
 type UserActBatch struct {
@@ -49,6 +49,6 @@ func (r *Batch) Fire(notifier muster.Notifier) {
 
 	err := r.Client.UserActRepo.InsertMany(r.Items)
 	if err != nil {
-		color.Redln(err)
+		facade.Log().Error("insert many user activities: %w", err)
 	}
 }

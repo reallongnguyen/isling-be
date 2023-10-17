@@ -18,7 +18,7 @@ services:
     restart: unless-stopped
     user: root
     image: surrealdb/surrealdb:latest
-    command: start --log debug --auth --user ${SURREAL_USER} --pass ${SURREAL_PASS} file:/mydata/surreal.db
+    command: start --log ${SURREAL_LOG} --auth --user ${SURREAL_USER} --pass ${SURREAL_PASS} file:/mydata/surreal.db
     volumes:
       - surreal_data:/mydata
     ports:

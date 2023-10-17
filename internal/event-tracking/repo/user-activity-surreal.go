@@ -21,6 +21,12 @@ func (r *UserActSurRepo) InsertMany(items []entity.UserActivity[any]) error {
 		return nil
 	}
 
+	ulid := "user_activities:ulid()"
+
+	for idx := range items {
+		items[idx].ID = ulid
+	}
+
 	sql := `
 		INSERT INTO user_activities $items
 	`

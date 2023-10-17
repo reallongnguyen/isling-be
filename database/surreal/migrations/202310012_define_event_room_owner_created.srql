@@ -1,0 +1,13 @@
+DEFINE EVENT room_created ON TABLE media_rooms 
+WHEN $event = 'CREATE'
+THEN {
+    LET $owner = (SELECT * FROM users WHERE id = $after.ownerID);
+
+    $fullName = IF $owner[0] != NONE THEN (
+      string::trim(
+        string::join(' ', $owner[0].firstName || '', $owner[0].lastName || '')
+      )
+    ) ELSE NONE END;
+
+    UPDATE $after SET ownerFullName = $fullName;
+};

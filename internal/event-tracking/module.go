@@ -60,6 +60,7 @@ func Register(
 	// TODO: separate the code below to route, usecase file
 	handler.POST("/v1/tracking/user-activities", func(c echo.Context) error {
 		accountID, _ := mymiddleware.GetAccountIDFromJWT(c)
+		guestID := c.Request().Header.Get("X-Guest-ID")
 		uaString := c.Request().Header.Get("User-Agent")
 		var userAgent cm_entity.UserAgent
 		hasUserAgentInCache := false
@@ -72,6 +73,8 @@ func Register(
 
 		if !hasUserAgentInCache {
 			ua := useragent.Parse(uaString)
+			facade.Log().Debug("useragent: %v", ua)
+
 			userAgent.From(ua)
 			facade.Cache().Set(uaString, userAgent, 100)
 			facade.Cache().Wait()
@@ -91,6 +94,8 @@ func Register(
 			OS:        userAgent.OS,
 			App:       dto.App,
 			Timestamp: time.Now(),
+			IP:        c.RealIP(),
+			GuestID:   guestID,
 		}
 
 		if userActivity.UserID != "0" && slices.Contains(recommendEventList, userActivity.EventName) {
