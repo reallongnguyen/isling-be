@@ -88,3 +88,8 @@ func (r *Watermill) Subscribe(topic string, handler func(uuid string, payload []
 
 	return nil
 }
+
+func (r *Watermill) Close() {
+	r.internalPub.Close()
+	r.internalSub.Close()
+}

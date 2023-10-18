@@ -16,7 +16,7 @@ func NewUserActSurRepo(sur *surreal.Surreal) usecase.UserActRepository {
 	}
 }
 
-func (r *UserActSurRepo) InsertMany(items []entity.UserActivity[any]) error {
+func (r *UserActSurRepo) InsertMany(items []*entity.UserActivity[any]) error {
 	if len(items) == 0 {
 		return nil
 	}

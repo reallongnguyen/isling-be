@@ -14,6 +14,7 @@ type (
 		JWT     `yaml:"jwt"`
 		GORSE   `yaml:"gorse"`
 		Surreal `yaml:"surreal"`
+		Redis   `yaml:"redis"`
 	}
 
 	// App -.
@@ -58,6 +59,10 @@ type (
 	GORSE struct {
 		URL    string `env-required:"true" yaml:"url" env:"GORSE_URL"`
 		APIKey string `env:"GORSE_SERVER_API_KEY"`
+	}
+
+	Redis struct {
+		URL string `env-required:"true" yaml:"url" env:"REDIS_URL"`
 	}
 )
 

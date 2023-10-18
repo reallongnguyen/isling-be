@@ -3,17 +3,19 @@ package facade
 import (
 	"isling-be/config"
 	"isling-be/pkg/logger"
+	"isling-be/pkg/redis"
 	"isling-be/pkg/watermill"
 
 	"github.com/dgraph-io/ristretto"
 )
 
 type Facade struct {
-	log        logger.Interface
-	config     *config.Config
-	cache      *ristretto.Cache
-	messageBus *watermill.Watermill
-	isSetup    bool
+	log     logger.Interface
+	config  *config.Config
+	cache   *ristretto.Cache
+	pubsub  *watermill.Watermill
+	redis   *redis.Redis
+	isSetup bool
 }
 
 var pool Facade
@@ -28,7 +30,8 @@ func Setup(log logger.Interface, cfg *config.Config, cache *ristretto.Cache) {
 	pool.log = log
 	pool.config = cfg
 	pool.cache = cache
-	pool.messageBus = watermill.NewWatermill(log)
+	pool.pubsub = watermill.NewWatermill(log)
+	pool.redis = redis.NewRedis(cfg.Redis.URL, log)
 
 	// Because router feature is not used yet, no need RunRouter
 	// pool.messageBus.RunRouter()
@@ -47,5 +50,18 @@ func Cache() *ristretto.Cache {
 }
 
 func Pubsub() *watermill.Watermill {
-	return pool.messageBus
+	return pool.pubsub
+}
+
+func Redis() *redis.Redis {
+	return pool.redis
+}
+
+func Close() {
+	if !pool.isSetup {
+		return
+	}
+
+	pool.redis.Close()
+	pool.pubsub.Close()
 }

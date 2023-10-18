@@ -51,9 +51,11 @@ func Run(cfg *config.Config) {
 	if err != nil {
 		l.Fatal("app - Run - cache.New: %v", err)
 	}
+	defer cache.Close()
 
 	// Setup facade
 	facade.Setup(l, cfg, cache)
+	defer facade.Close()
 
 	// HTTP Server
 	handler := echo.New()

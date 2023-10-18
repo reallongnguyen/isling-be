@@ -110,12 +110,14 @@ services:
       SURREAL_DB: ${SURREAL_DB}
       SURREAL_USER: ${SURREAL_USER}
       SURREAL_PASS: ${SURREAL_PASS}
+      REDIS_URL: redis://redis:6379
     ports:
       - 8080:8080
     depends_on:
       - postgres
       - server
       - surrealdb
+      - redis
 
   # integration:
   #   build:

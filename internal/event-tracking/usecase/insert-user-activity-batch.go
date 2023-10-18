@@ -29,7 +29,7 @@ func (r *UserActBatch) Stop() error {
 	return r.muster.Stop()
 }
 
-func (r *UserActBatch) Add(item entity.UserActivity[any]) error {
+func (r *UserActBatch) Add(item *entity.UserActivity[any]) error {
 	r.muster.Work <- item
 
 	return nil
@@ -37,11 +37,11 @@ func (r *UserActBatch) Add(item entity.UserActivity[any]) error {
 
 type Batch struct {
 	Client *UserActBatch
-	Items  []entity.UserActivity[any]
+	Items  []*entity.UserActivity[any]
 }
 
 func (r *Batch) Add(item any) {
-	r.Items = append(r.Items, item.(entity.UserActivity[any]))
+	r.Items = append(r.Items, item.(*entity.UserActivity[any]))
 }
 
 func (r *Batch) Fire(notifier muster.Notifier) {

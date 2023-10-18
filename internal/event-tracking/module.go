@@ -5,6 +5,7 @@ import (
 	appresponse "isling-be/internal/common/controller/http"
 	mymiddleware "isling-be/internal/common/controller/http/middleware"
 	cm_entity "isling-be/internal/common/entity"
+	"isling-be/internal/event-tracking/delivery/http/v1/dto"
 	"isling-be/internal/event-tracking/entity"
 	"isling-be/internal/event-tracking/repo"
 	"isling-be/internal/event-tracking/usecase"
@@ -38,14 +39,29 @@ func Register(
 	sur *surreal.Surreal,
 ) func() {
 	userActBatchUC := usecase.UserActBatch{
-		MaxBatchSize:        10000,
-		BatchTimeout:        2 * time.Second,
-		PendingWorkCapacity: 80000,
+		MaxBatchSize:        1000,
+		BatchTimeout:        1 * time.Minute,
+		PendingWorkCapacity: 4000,
 		UserActRepo:         repo.NewUserActSurRepo(sur),
 	}
 
 	if err := userActBatchUC.Start(); err != nil {
 		facade.Log().Error("event-tracking: start userActBatch: %w", err)
+
+		return func() {}
+	}
+
+	ccuLogRepo := repo.NewCCULogRepo(facade.Redis())
+
+	ccuLogBatchUC := usecase.CCULogBatch{
+		MaxBatchSize:        1000,
+		BatchTimeout:        1 * time.Minute,
+		PendingWorkCapacity: 4000,
+		CCULogRepo:          ccuLogRepo,
+	}
+
+	if err := ccuLogBatchUC.Start(); err != nil {
+		facade.Log().Error("event-tracking: start ccuLogBatch: %w", err)
 
 		return func() {}
 	}
@@ -58,7 +74,7 @@ func Register(
 	}
 
 	// TODO: separate the code below to route, usecase file
-	handler.POST("/v1/tracking/user-activities", func(c echo.Context) error {
+	handler.POST("/tracking/v1/user-activities", func(c echo.Context) error {
 		accountID, _ := mymiddleware.GetAccountIDFromJWT(c)
 		guestID := c.Request().Header.Get("X-Guest-ID")
 		uaString := c.Request().Header.Get("User-Agent")
@@ -73,7 +89,6 @@ func Register(
 
 		if !hasUserAgentInCache {
 			ua := useragent.Parse(uaString)
-			facade.Log().Debug("useragent: %v", ua)
 
 			userAgent.From(ua)
 			facade.Cache().Set(uaString, userAgent, 100)
@@ -125,7 +140,7 @@ func Register(
 			}()
 		}
 
-		err := userActBatchUC.Add(userActivity)
+		err := userActBatchUC.Add(&userActivity)
 		if err != nil {
 			return appresponse.ResponseError(c, err)
 		}
@@ -133,9 +148,82 @@ func Register(
 		return appresponse.ResponseSuccess(c, true)
 	}, middlewares...)
 
+	handler.POST("/tracking/v1/ccu-logs", func(c echo.Context) error {
+		accountID, _ := mymiddleware.GetAccountIDFromJWT(c)
+		guestID := c.Request().Header.Get("X-Guest-ID")
+		uaString := c.Request().Header.Get("User-Agent")
+		var userAgent cm_entity.UserAgent
+		hasUserAgentInCache := false
+
+		data, found := facade.Cache().Get(uaString)
+
+		if found {
+			userAgent, hasUserAgentInCache = data.(cm_entity.UserAgent)
+		}
+
+		if !hasUserAgentInCache {
+			ua := useragent.Parse(uaString)
+
+			userAgent.From(ua)
+			facade.Cache().Set(uaString, userAgent, 100)
+			facade.Cache().Wait()
+		}
+
+		ccuLog := entity.CCULog{
+			Device:    userAgent.Device,
+			OS:        userAgent.OS,
+			IP:        c.RealIP(),
+			Timestamp: time.Now(),
+		}
+
+		if accountID != 0 {
+			ccuLog.UserID = strconv.FormatInt(int64(accountID), 10)
+		} else {
+			ccuLog.UserID = guestID
+		}
+
+		err := ccuLogBatchUC.Add(&ccuLog)
+		if err != nil {
+			return appresponse.ResponseError(c, err)
+		}
+
+		return appresponse.ResponseSuccess(c, true)
+	}, middlewares...)
+
+	handler.GET("/tracking/v1/ccu-logs/count", func(c echo.Context) error {
+		ccuQueryDTO := dto.CountCCUReq{
+			Timestamp:  c.QueryParam("timestamp"),
+			WindowSize: c.QueryParam("window_size"),
+		}
+
+		if ccuQueryDTO.WindowSize == "" {
+			ccuQueryDTO.WindowSize = "1"
+		}
+
+		req, err := ccuQueryDTO.ToReq()
+		if err != nil {
+			return appresponse.ResponseCustomError(c, http.StatusBadRequest, "bad request", []error{err})
+		}
+
+		count, err := ccuLogRepo.CountCCU(req.Timestamp, req.WindowSize)
+		if err != nil {
+			return appresponse.ResponseError(c, err)
+		}
+
+		res := struct {
+			Count int64 `json:"count"`
+		}{Count: count}
+
+		return appresponse.ResponseSuccess(c, res)
+	}, mymiddleware.VerifyJWT())
+
 	return func() {
 		if err := userActBatchUC.Stop(); err != nil {
-			facade.Log().Error("stop userActMuster: %w", err)
+			facade.Log().Error("stop userActBatchUC: %w", err)
+		}
+
+		if err := ccuLogBatchUC.Stop(); err != nil {
+			facade.Log().Error("stop ccuLogBatchUC: %w", err)
 		}
 	}
 }

@@ -28,3 +28,6 @@ surreal:
   url: 'ws://localhost:8000/rpc'
   ns: 'iplay'
   db: 'iplay'
+
+redis:
+  url: 'redis://localhost:6379'
