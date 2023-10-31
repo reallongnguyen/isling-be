@@ -135,6 +135,7 @@ services:
       - 9090:9090
     volumes:
       - prometheus-data:/prometheus
+      - ./config/prometheus:/etc/prometheus
 
 volumes:
   pg-data:

@@ -55,7 +55,7 @@ func Register(
 
 	ccuLogBatchUC := usecase.CCULogBatch{
 		MaxBatchSize:        1000,
-		BatchTimeout:        1 * time.Minute,
+		BatchTimeout:        30 * time.Second,
 		PendingWorkCapacity: 4000,
 		CCULogRepo:          ccuLogRepo,
 	}
@@ -161,6 +161,9 @@ func Register(
 			userAgent, hasUserAgentInCache = data.(cm_entity.UserAgent)
 		}
 
+		// facade.Log().Trace("%w", useragent.Parse(uaString))
+		// client: ios, android, web_pc, web_mobile, other
+
 		if !hasUserAgentInCache {
 			ua := useragent.Parse(uaString)
 
@@ -216,6 +219,33 @@ func Register(
 
 		return appresponse.ResponseSuccess(c, res)
 	}, mymiddleware.VerifyJWT())
+
+	handler.GET("/tracking/v1/ccu-logs/metrics", func(c echo.Context) error {
+		latestLogTime := time.Now().Add(-time.Minute)
+
+		countLimit, err := ccuLogRepo.CountCCU(latestLogTime, 30)
+		if err != nil {
+			return appresponse.ResponseError(c, err)
+		}
+
+		countSession, err := ccuLogRepo.CountCCU(latestLogTime, 5)
+		if err != nil {
+			return appresponse.ResponseError(c, err)
+		}
+
+		countPeak, err := ccuLogRepo.CountCCU(latestLogTime, 1)
+		if err != nil {
+			return appresponse.ResponseError(c, err)
+		}
+
+		data := `
+isling_be_ccu_peak ` + strconv.Itoa(int(countPeak)) + `
+isling_be_ccu_session ` + strconv.Itoa(int(countSession)) + `
+isling_be_ccu_limit ` + strconv.Itoa(int(countLimit)) + `
+		`
+
+		return c.String(http.StatusOK, data)
+	})
 
 	return func() {
 		if err := userActBatchUC.Stop(); err != nil {

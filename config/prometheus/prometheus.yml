@@ -1,0 +1,163 @@
+alerting:
+  alertmanagers:
+  - follow_redirects: true
+    enable_http2: true
+    scheme: http
+    timeout: 10s
+    api_version: v2
+    static_configs:
+    - targets: []
+
+# my global config
+global:
+  scrape_interval: 15s
+  evaluation_interval: 30s
+  body_size_limit: 15MB
+  sample_limit: 1500
+  target_limit: 30
+  label_limit: 30
+  label_name_length_limit: 200
+  label_value_length_limit: 200
+
+  external_labels:
+    monitor: codelab
+    foo: bar
+
+scrape_configs:
+  - job_name: prometheus
+
+    honor_labels: true
+    # scrape_interval is defined by the configured global (15s).
+    # scrape_timeout is defined by the global default (10s).
+
+    # metrics_path defaults to '/metrics'
+    # scheme defaults to 'http'.
+
+    file_sd_configs:
+      - files:
+          - foo/*.slow.json
+          - foo/*.slow.yml
+          - single/file.yml
+        refresh_interval: 10m
+      - files:
+          - bar/*.yaml
+
+    static_configs:
+      - targets: ["localhost:9090", "localhost:9191"]
+        labels:
+          my: label
+          your: label
+
+    relabel_configs:
+      - source_labels: [job, __meta_dns_name]
+        regex: (.*)some-[regex]
+        target_label: job
+        replacement: foo-${1}
+        # action defaults to 'replace'
+      - source_labels: [abc]
+        target_label: cde
+      - replacement: static
+        target_label: abc
+      - regex:
+        replacement: static
+        target_label: abc
+      - source_labels: [foo]
+        target_label: abc
+        action: keepequal
+      - source_labels: [foo]
+        target_label: abc
+        action: dropequal
+
+    # authorization:
+    #   credentials_file: valid_token_file
+
+  # - job_name: service-x
+
+  #   basic_auth:
+  #     username: admin_name
+  #     password: "multiline\nmysecret\ntest"
+
+  #   scrape_interval: 50s
+  #   scrape_timeout: 5s
+
+  #   sample_limit: 1000
+  #   target_limit: 35
+  #   label_limit: 35
+  #   label_name_length_limit: 210
+  #   label_value_length_limit: 210
+
+
+  #   metrics_path: /my_path
+  #   scheme: https
+
+  #   dns_sd_configs:
+  #     - refresh_interval: 15s
+  #       names:
+  #         - first.dns.address.domain.com
+  #         - second.dns.address.domain.com
+  #     - names:
+  #         - first.dns.address.domain.com
+
+  #   relabel_configs:
+  #     - source_labels: [job]
+  #       regex: (.*)some-[regex]
+  #       action: drop
+  #     - source_labels: [__address__]
+  #       modulus: 8
+  #       target_label: __tmp_hash
+  #       action: hashmod
+  #     - source_labels: [__tmp_hash]
+  #       regex: 1
+  #       action: keep
+  #     - action: labelmap
+  #       regex: 1
+  #     - action: labeldrop
+  #       regex: d
+  #     - action: labelkeep
+  #       regex: k
+
+  #   metric_relabel_configs:
+  #     - source_labels: [__name__]
+  #       regex: expensive_metric.*
+  #       action: drop
+
+  - job_name: docker
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+
+  - job_name: local-isling-play-api
+    honor_timestamps: true
+    scrape_interval: 15s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    scheme: http
+    follow_redirects: true
+    enable_http2: true
+    static_configs:
+    - targets:
+      - host.docker.internal:8080
+
+  - job_name: local-isling-play-api-ccu
+    honor_timestamps: true
+    scrape_interval: 60s
+    scrape_timeout: 10s
+    metrics_path: /tracking/v1/ccu-logs/metrics
+    scheme: http
+    follow_redirects: true
+    enable_http2: true
+    static_configs:
+    - targets:
+      - host.docker.internal:8080
+
+  - job_name: dev-isling-play-api
+    honor_timestamps: true
+    scrape_interval: 50s
+    scrape_timeout: 10s
+    metrics_path: /metrics
+    scheme: https
+    follow_redirects: true
+    enable_http2: true
+    sample_limit: 4000
+    static_configs:
+    - targets:
+      - dev.api.isling.me
