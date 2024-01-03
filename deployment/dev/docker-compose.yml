@@ -1,0 +1,147 @@
+version: '3.9'
+services:
+  postgres:
+    container_name: postgres
+    image: postgres
+    restart: unless-stopped
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    ports:
+      - 5432:5432
+
+  surrealdb:
+    container_name: surrealdb
+    restart: unless-stopped
+    user: root
+    image: surrealdb/surrealdb:latest
+    command: start --log ${SURREAL_LOG} --auth --user ${SURREAL_USER} --pass ${SURREAL_PASS} file:/mydata/surreal.db
+    volumes:
+      - surreal_data:/mydata
+    ports:
+      - 8000:8000
+
+  redis:
+    container_name: redis
+    image: redis/redis-stack
+    restart: unless-stopped
+    ports:
+      - 6379:6379
+    # environment:
+    #   REDIS_ARGS: --requirepass ${REDIS_PASSWORD}
+    volumes:
+      - redis-data:/data
+
+  worker:
+    container_name: gorse-worker
+    image: zhenghaoz/gorse-worker
+    restart: unless-stopped
+    ports:
+      - 8089:8089
+    command: >
+      --master-host master --master-port 8086
+      --http-host 0.0.0.0 --http-port 8089
+      --log-path /var/log/gorse/worker.log
+      --cache-path /var/lib/gorse/worker_cache.data
+    volumes:
+      - gorse_log:/var/log/gorse
+      - worker_data:/var/lib/gorse
+    depends_on:
+      - master
+
+  server:
+    container_name: gorse-server
+    image: zhenghaoz/gorse-server
+    restart: unless-stopped
+    ports:
+      - 8087:8087
+    command: >
+      --master-host master --master-port 8086
+      --http-host 0.0.0.0 --http-port 8087
+      --log-path /var/log/gorse/server.log
+      --cache-path /var/lib/gorse/server_cache.data
+    volumes:
+      - gorse_log:/var/log/gorse
+      - server_data:/var/lib/gorse
+    depends_on:
+      - master
+
+  master:
+    container_name: gorse-master
+    image: zhenghaoz/gorse-master
+    restart: unless-stopped
+    ports:
+      - 8086:8086
+      - 8088:8088
+    environment:
+      GORSE_CACHE_STORE: redis://redis:6379
+      GORSE_DATA_STORE: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${GORSE_DB}?sslmode=disable
+      GORSE_DASHBOARD_USER_NAME: ${GORSE_DASHBOARD_USER_NAME}
+      GORSE_DASHBOARD_PASSWORD: ${GORSE_DASHBOARD_PASSWORD}
+      GORSE_ADMIN_API_KEY: ${GORSE_ADMIN_API_KEY}
+      GORSE_SERVER_API_KEY: ${GORSE_SERVER_API_KEY}
+    command: >
+      -c /etc/gorse/config.toml
+      --log-path /var/log/gorse/master.log
+      --cache-path /var/lib/gorse/master_cache.data
+    volumes:
+      - ./config/gorse-config.toml:/etc/gorse/config.toml
+      - gorse_log:/var/log/gorse
+      - master_data:/var/lib/gorse
+    depends_on:
+      - redis
+      - postgres
+
+  app:
+    build: .
+    container_name: app
+    image: app
+    restart: unless-stopped
+    environment:
+      PG_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
+      GORSE_URL: http://server:8087
+      GORSE_SERVER_API_KEY: ${GORSE_SERVER_API_KEY}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      SURREAL_URL: ws://surrealdb:8000/rpc
+      SURREAL_NS: ${SURREAL_NS}
+      SURREAL_DB: ${SURREAL_DB}
+      SURREAL_USER: ${SURREAL_USER}
+      SURREAL_PASS: ${SURREAL_PASS}
+      REDIS_URL: redis://redis:6379
+    network_mode: host
+    ports:
+      - 8080:8080
+    depends_on:
+      - postgres
+      - redis
+
+  # integration:
+  #   build:
+  #     context: .
+  #     dockerfile: integration-test/Dockerfile
+  #   container_name: integration
+  #   image: integration
+  #   depends_on:
+  #     - app
+
+  prometheus:
+    container_name: prometheus
+    image: prom/prometheus
+    ports:
+      - 9090:9090
+    volumes:
+      - prometheus-data:/prometheus
+      - ./config/prometheus:/etc/prometheus
+
+volumes:
+  pg-data:
+  worker_data:
+  server_data:
+  master_data:
+  gorse_log:
+  surreal_data:
+  prometheus-data:
+  redis-data:
