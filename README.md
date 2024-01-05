@@ -41,6 +41,19 @@ Integration tests (can be run in CI):
 $ make compose-up-integration-test
 ```
 
+## Deployment
+
+### Migration on the VM
+
+Using docker
+
+```sh
+export PG_URL=postgres://<user>:<pass>@localhost:5432/postgres
+sudo docker run -v ./database/postgres/migrations:/migrations --network host migrate/migrate -path=/migrations/ -database "$PG_URL?sslmode=disable" up
+```
+
+Using migrate CLI: [docs](https://github.com/golang-migrate/migrate/tree/master/cmd/migrate)
+
 ## Project structure
 
 ### `cmd/app/main.go`

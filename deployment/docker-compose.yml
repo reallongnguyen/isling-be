@@ -96,36 +96,21 @@ services:
       - postgres
 
   app:
-    build: .
     container_name: app
     image: app
     restart: unless-stopped
     environment:
-      PG_URL: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres/${POSTGRES_DB}
-      GORSE_URL: http://server:8087
+      PG_URL: ${PG_URL}
+      GORSE_URL: ${GORSE_URL}
       GORSE_SERVER_API_KEY: ${GORSE_SERVER_API_KEY}
       JWT_SECRET_KEY: ${JWT_SECRET_KEY}
-      SURREAL_URL: ws://surrealdb:8000/rpc
+      SURREAL_URL: ${SURREAL_URL}
       SURREAL_NS: ${SURREAL_NS}
       SURREAL_DB: ${SURREAL_DB}
       SURREAL_USER: ${SURREAL_USER}
       SURREAL_PASS: ${SURREAL_PASS}
-      REDIS_URL: redis://redis:6379
+      REDIS_URL: ${REDIS_URL}
     network_mode: host
-    ports:
-      - 8080:8080
-    depends_on:
-      - postgres
-      - redis
-
-  # integration:
-  #   build:
-  #     context: .
-  #     dockerfile: integration-test/Dockerfile
-  #   container_name: integration
-  #   image: integration
-  #   depends_on:
-  #     - app
 
   prometheus:
     container_name: prometheus

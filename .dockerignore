@@ -1,5 +1,6 @@
 docker-compose.yml
 /database
+/deployment
 .air.toml
 .env.example
 .golangci.yml
