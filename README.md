@@ -43,7 +43,16 @@ $ make compose-up-integration-test
 
 ## Deployment
 
-### Migration on the VM
+Follow this instruction to deploy system to VM on Google Cloud Platform
+
+- [Overview](docs/deployment/0.Overview.md)
+- [Infra](docs/deployment/1.Infra.md)
+- [Database](docs/deployment/2.Database.md)
+- [Grose](docs/deployment/3.Gorse.md)
+- [API](docs/deployment/4.API.md)
+- [Load balancer](docs/deployment/5.Load-balancer.md)
+
+### Migration PostgreSQL
 
 Using docker
 
@@ -53,6 +62,10 @@ sudo docker run -v ./database/postgres/migrations:/migrations --network host mig
 ```
 
 Using migrate CLI: [docs](https://github.com/golang-migrate/migrate/tree/master/cmd/migrate)
+
+```sh
+make migrate-up
+```
 
 ## Project structure
 

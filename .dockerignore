@@ -1,7 +1,11 @@
-docker-compose.yml
 /database
 /deployment
+/docs
+/storage
+/stress-test
+docker-compose.yml
 .air.toml
 .env.example
 .golangci.yml
+Makefile
 README.md
